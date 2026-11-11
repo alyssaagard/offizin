@@ -1,0 +1,25 @@
+name: Check
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install xmllint
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+      - name: Build generated files
+        run: npm run build
+      - name: Generated files are committed and up to date
+        run: git diff --exit-code -- docs/word/manifest.xml docs/google-docs docs/version.json
+      - name: Run checks
+        run: npm run check

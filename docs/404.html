@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offizin | Page not found</title>
+  <meta name="theme-color" content="#FAF8F3">
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #faf8f3; color: #1a1a1a; font: 16px/1.6 "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; text-align: center; padding: 16px; }
+    h1 { font: italic 500 48px/1.1 "Cormorant Garamond", Garamond, Georgia, serif; margin: 12px 0; }
+    a { color: #7f6538; }
+  </style>
+</head>
+<body>
+  <main>
+    <svg width="56" height="56" viewBox="0 0 512 512" aria-hidden="true"><path d="M44 0 H384 L512 128 V468 Q512 512 468 512 H44 Q0 512 0 468 V44 Q0 0 44 0 Z" fill="#CDBEA0"/><path d="M60 16 H377 L496 135 V468 Q496 496 468 496 H44 Q16 496 16 468 V44 Q16 16 44 16 Z" fill="#FAF8F3"/><path d="M384 0 V98 Q384 128 414 128 H512 Z" fill="#A88B5C"/></svg>
+    <h1>This page is not here</h1>
+    <p>It may have moved when Layout Toolkit became Offizin.</p>
+    <p><a id="home" href="/">Go to the Offizin home page</a></p>
+  </main>
+  <script>
+    // Works both on the custom domain and on the github.io project address.
+    if (location.pathname.indexOf("/offizin/") === 0) document.getElementById("home").href = "/offizin/";
+  </script>
+</body>
+</html>

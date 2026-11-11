@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offizin for Google Docs | Install</title>
+  <meta name="description" content="Add Offizin to Google Docs in a few minutes by pasting three files into Apps Script, or by copying a starter document.">
+  <meta name="theme-color" content="#FAF8F3">
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-head">
+    <div class="wrap">
+      <a class="brand" href="../" aria-label="Offizin home"><img src="../assets/brand/offizin-mark.svg" alt=""><span>Offizin</span></a>
+      <nav class="nav" aria-label="Main">
+        <a href="../try/">Try it</a>
+        <a href="../word/">Word</a>
+        <a href="./" aria-current="page">Google Docs</a>
+        <a href="../support/">Help</a>
+        <a href="https://github.com/alyssaagard/offizin">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <p class="kicker">Google Docs</p>
+    <h1 class="page-title">Offizin for Google Docs</h1>
+    <p class="lead">Offizin for Google Docs is a small Apps Script project that lives inside a document. Once it is in a document, an <strong>Offizin</strong> menu opens the same panel you can try in the <a href="../try/">live demo</a>. It works with personal Google accounts and with Google Workspace for business, school, and nonprofits.</p>
+
+    <section id="starter" hidden>
+      <h2>The quick way: copy the starter document</h2>
+      <ol class="steps">
+        <li>Select the button below and choose <strong>Make a copy</strong>. Offizin comes with the copy.</li>
+        <li>In your copy, choose <strong>Offizin</strong>, then <strong>Open Offizin</strong>, and allow access when Google asks (see <a href="#permissions">permissions</a>).</li>
+        <li>Keep that copy as your starter. Each time you need a new publication, make a copy of it.</li>
+      </ol>
+      <p><a class="btn btn-primary" id="starter-link" href="#">Copy the starter document</a></p>
+      <h2>Or add Offizin to any document yourself</h2>
+    </section>
+
+    <section id="manual">
+      <h2 id="manual-title">Add Offizin to a document (about three minutes)</h2>
+      <ol class="steps">
+        <li>Open the Google Doc you want to use, or a new one at <a href="https://docs.new">docs.new</a>. If it is a pageless document, choose <strong>File</strong>, <strong>Page setup</strong>, then <strong>Pages</strong>.</li>
+        <li>Choose <strong>Extensions</strong>, then <strong>Apps Script</strong>. A code editor opens in a new tab. Click <strong>Untitled project</strong> at the top and rename it <strong>Offizin</strong>.</li>
+        <li>
+          In <code>Code.gs</code>, select everything and replace it with Offizin's code:
+          <div class="file-row"><span class="grow"><code>Code.gs</code> <span class="small muted">The menu and the part that builds publications</span></span><button type="button" class="btn btn-primary" data-copy="Code.gs">Copy Code.gs</button><a class="btn" href="Code.gs" download>Download</a></div>
+        </li>
+        <li>
+          Next to <strong>Files</strong>, select <strong>+</strong>, then <strong>HTML</strong>. Name it <code>Sidebar</code> exactly (Apps Script adds <code>.html</code>). Replace everything in it with:
+          <div class="file-row"><span class="grow"><code>Sidebar.html</code> <span class="small muted">The Offizin panel</span></span><button type="button" class="btn btn-primary" data-copy="Sidebar.html">Copy Sidebar.html</button><a class="btn" href="Sidebar.html" download>Download</a></div>
+        </li>
+        <li>
+          Open <strong>Project Settings</strong> (the gear icon) and check <strong>Show "appsscript.json" manifest file in editor</strong>. Go back to the <strong>Editor</strong> (the code icon), open <code>appsscript.json</code>, and replace everything in it with:
+          <div class="file-row"><span class="grow"><code>appsscript.json</code> <span class="small muted">Asks only for access to this document</span></span><button type="button" class="btn btn-primary" data-copy="appsscript.json">Copy appsscript.json</button><a class="btn" href="appsscript.json" download>Download</a></div>
+        </li>
+        <li>Save with <kbd>Ctrl</kbd> <kbd>S</kbd> (or <kbd>Command</kbd> <kbd>S</kbd>), close the Apps Script tab, and reload your document.</li>
+        <li>Choose <strong>Offizin</strong>, then <strong>Open Offizin</strong>. The first time, Google asks you to allow access.</li>
+      </ol>
+      <p class="callout"><strong>Tip: make it your starter</strong>Name this document something like "Offizin starter" and leave it empty. Whenever you need a new brochure or flyer, choose <strong>File</strong>, then <strong>Make a copy</strong>. Google copies Offizin along with the document, so you only paste the code once.</p>
+    </section>
+
+    <h2 id="permissions">Permissions and the "unverified app" screen</h2>
+    <p>Offizin asks for two permissions, the narrowest Google offers:</p>
+    <ul>
+      <li><strong>View and manage documents that this application has been installed in.</strong> Offizin can only change the document it is in. It cannot see your other files.</li>
+      <li><strong>Display and run third-party web content in prompts and sidebars.</strong> This is what lets the Offizin panel open beside your document.</li>
+    </ul>
+    <p>Because you pasted the code yourself, it runs as your own private script, and Google has not reviewed it. With a personal Gmail account, Google shows <strong>Google hasn't verified this app</strong>. Select <strong>Advanced</strong>, then <strong>Go to Offizin (unsafe)</strong>, then <strong>Allow</strong>. The wording is Google's standard text for any script that is not published in its Marketplace. In a Google Workspace organization, people in the same organization as the document's owner usually see the normal permission screen.</p>
+
+    <h2>For Google Workspace organizations</h2>
+    <div class="two-col">
+      <div class="card">
+        <h3>Share a starter document</h3>
+        <p>Set up one Offizin starter document, share it with your organization as view only, and ask people to make a copy. Each copy carries Offizin, and each person approves it once.</p>
+      </div>
+      <div class="card">
+        <h3>Publish privately to your domain</h3>
+        <p>An administrator can publish Offizin as a private add-on through the Google Workspace Marketplace SDK, so it appears in every document under Extensions. This needs a Google Cloud project; see <a href="../support/#workspace">Help</a> for the steps.</p>
+      </div>
+    </div>
+
+    <h2>Updating</h2>
+    <p>Pasted copies of Offizin do not update themselves. When a new version is released, repeat steps 3 to 5 in your starter document. Documents copied from it afterward get the new version. The current version is <strong id="version">2.0.0</strong>.</p>
+  </main>
+
+  <footer class="site-foot">
+    <div class="wrap">
+      <span>Offizin by Alyssa I. Agard. Open source under the MIT License. Not affiliated with Google.</span>
+      <nav aria-label="Footer"><a href="../privacy/">Privacy</a><a href="../terms/">Terms</a><a href="../support/">Help</a></nav>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      document.querySelectorAll("[data-copy]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var label = btn.textContent;
+          fetch(btn.getAttribute("data-copy"), { cache: "no-cache" })
+            .then(function (r) {
+              if (!r.ok) throw new Error("download failed");
+              return r.text();
+            })
+            .then(function (text) { return navigator.clipboard.writeText(text); })
+            .then(function () {
+              btn.textContent = "Copied";
+              setTimeout(function () { btn.textContent = label; }, 2500);
+            })
+            .catch(function () {
+              btn.textContent = "Copy failed. Use Download.";
+              setTimeout(function () { btn.textContent = label; }, 4000);
+            });
+        });
+      });
+      fetch("../version.json", { cache: "no-cache" })
+        .then(function (r) { return r.json(); })
+        .then(function (v) {
+          if (v.version) document.getElementById("version").textContent = v.version;
+          if (v.googleStarterCopyUrl) {
+            document.getElementById("starter").hidden = false;
+            document.getElementById("starter-link").href = v.googleStarterCopyUrl;
+            document.getElementById("manual-title").hidden = true;
+          }
+        })
+        .catch(function () {});
+    })();
+  </script>
+</body>
+</html>

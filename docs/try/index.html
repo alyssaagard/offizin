@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Try Offizin | Live demo</title>
+  <meta name="description" content="Try Offizin in your browser: pick a publication, change its colors, fonts, and business details, and download it as a Word file.">
+  <meta name="theme-color" content="#FAF8F3">
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+  <link rel="stylesheet" href="../assets/site.css">
+  <link rel="stylesheet" href="../app/ui/panel.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" id="template-fonts">
+</head>
+<body class="demo-body">
+  <a class="skip" href="#demo-pages">Skip to the page</a>
+  <header class="site-head">
+    <div class="wrap">
+      <a class="brand" href="../" aria-label="Offizin home"><img src="../assets/brand/offizin-mark.svg" alt=""><span>Offizin</span></a>
+      <nav class="nav" aria-label="Main">
+        <a href="./" aria-current="page">Try it</a>
+        <a href="../word/">Word</a>
+        <a href="../google-docs/">Google Docs</a>
+        <a href="../support/">Help</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="demo">
+    <section class="demo-canvas" aria-label="Publication preview">
+      <div class="demo-bar">
+        <strong id="demo-name">Live demo</strong>
+        <span class="spacer"></span>
+        <label>Zoom
+          <select id="zoom">
+            <option value="fit" selected>Fit</option>
+            <option value="0.5">50%</option>
+            <option value="0.75">75%</option>
+            <option value="1">100%</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="guides" checked> Guides</label>
+        <button type="button" class="btn btn-primary" id="download">Download Word file</button>
+      </div>
+      <div class="demo-pages" id="demo-pages" tabindex="-1">
+        <div class="demo-empty">
+          <p class="display">Pick a publication</p>
+          <p>Choose one from the Create tab on the right. Then try a new color scheme, a font scheme, or your own business information, and watch the page change.</p>
+        </div>
+      </div>
+    </section>
+    <aside class="demo-panel" id="panel" aria-label="Offizin panel"></aside>
+  </main>
+
+  <script type="module">
+    import { googleFontsHref } from "../app/core/schemes.js";
+    import { createDemoHost } from "../app/hosts/demo.js";
+    import { mountPanel } from "../app/ui/panel.js";
+
+    // Template fonts for the preview. The demo is the one page that loads Google Fonts.
+    document.getElementById("template-fonts").href = googleFontsHref();
+
+    const pages = document.getElementById("demo-pages");
+    const name = document.getElementById("demo-name");
+    const host = createDemoHost({
+      canvas: pages,
+      onRender: (model) => (name.textContent = model.name),
+    });
+    const panel = mountPanel(document.getElementById("panel"), host, { siteUrl: ".." });
+
+    document.getElementById("zoom").addEventListener("change", (e) => host.setView({ zoom: e.target.value }));
+    document.getElementById("guides").addEventListener("change", (e) => host.setView({ guides: e.target.checked }));
+    document.getElementById("download").addEventListener("click", () => {
+      try {
+        host.downloadDocx();
+        panel.setStatus("Word file downloaded. It also opens in Google Docs: upload it to Drive and open it with Google Docs.", "success", true);
+      } catch (e) {
+        panel.setStatus(e.message, "error");
+      }
+    });
+    let resize;
+    window.addEventListener("resize", () => {
+      clearTimeout(resize);
+      resize = setTimeout(() => host.redraw(), 150);
+    });
+    document.fonts && document.fonts.ready.then(() => host.redraw());
+
+    // Open a template from a link such as try/#template=newsletter, or start with the tri-fold.
+    function openFromHash() {
+      const m = /template=([a-z0-9-]+)/.exec(location.hash);
+      panel.openTemplate(m ? m[1] : "trifold");
+      const create = document.querySelector('#panel [data-action="create"]');
+      if (create) create.click();
+    }
+    setTimeout(openFromHash, 0);
+    window.addEventListener("hashchange", openFromHash);
+  </script>
+</body>
+</html>

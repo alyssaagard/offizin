@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offizin for Word | Install</title>
+  <meta name="description" content="Install Offizin in Microsoft Word on the web, Windows, or Mac, or deploy it to your whole organization from the Microsoft 365 admin center.">
+  <meta name="theme-color" content="#FAF8F3">
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-head">
+    <div class="wrap">
+      <a class="brand" href="../" aria-label="Offizin home"><img src="../assets/brand/offizin-mark.svg" alt=""><span>Offizin</span></a>
+      <nav class="nav" aria-label="Main">
+        <a href="../try/">Try it</a>
+        <a href="./" aria-current="page">Word</a>
+        <a href="../google-docs/">Google Docs</a>
+        <a href="../support/">Help</a>
+        <a href="https://github.com/alyssaagard/offizin">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <p class="kicker">Microsoft Word</p>
+    <h1 class="page-title">Offizin for Word</h1>
+    <p class="lead">Offizin adds a tab to Word with five buttons: Publications, Design, Page Parts, Business Info, and Check and Print. It is free for personal, work, school, and commercial use, and it needs no account.</p>
+
+    <div class="ribbon" role="img" aria-label="The Offizin tab in Word, with the buttons Publications, Design, Page Parts, Business Info, and Check and Print">
+      <span class="rtab">Offizin</span>
+      <span style="width:100%"></span>
+      <span class="rbtn"><img src="../assets/icons/ribbon-create-32.png" alt="">Publications</span>
+      <span class="rbtn"><img src="../assets/icons/ribbon-design-32.png" alt="">Design</span>
+      <span class="rbtn"><img src="../assets/icons/ribbon-insert-32.png" alt="">Page Parts</span>
+      <span class="rbtn"><img src="../assets/icons/ribbon-info-32.png" alt="">Business Info</span>
+      <span class="rbtn"><img src="../assets/icons/ribbon-check-32.png" alt="">Check and Print</span>
+    </div>
+
+    <h2>Step 1: Download the manifest</h2>
+    <p>Word add-ins install from a small file called a manifest. It tells Word where Offizin lives and which buttons to add. It contains no program code of its own.</p>
+    <div class="file-row">
+      <span class="grow"><code>offizin-manifest.xml</code><br><span class="small muted">The address inside it is <span id="manifest-url">https://offizin.alyssaagard.dev/word/manifest.xml</span></span></span>
+      <a class="btn btn-primary" href="manifest.xml" download="offizin-manifest.xml">Download manifest</a>
+    </div>
+
+    <h2>Step 2: Add it to Word</h2>
+    <div class="tabs" role="tablist" aria-label="Your version of Word">
+      <button type="button" role="tab" id="t-web" aria-controls="p-web" aria-selected="true">Word on the web</button>
+      <button type="button" role="tab" id="t-mac" aria-controls="p-mac" aria-selected="false">Word for Mac</button>
+      <button type="button" role="tab" id="t-win" aria-controls="p-win" aria-selected="false">Word for Windows</button>
+      <button type="button" role="tab" id="t-org" aria-controls="p-org" aria-selected="false">Whole organization</button>
+    </div>
+
+    <section class="tab-panel" role="tabpanel" id="p-web" aria-labelledby="t-web">
+      <p>Works with personal Microsoft accounts (Outlook.com, Hotmail, free Word on the web) and with work or school accounts.</p>
+      <ol class="steps">
+        <li>Open any document in Word on the web at <a href="https://www.office.com">office.com</a>.</li>
+        <li>On the <strong>Home</strong> tab, select <strong>Add-ins</strong>, then <strong>More Settings</strong> (or <strong>More Add-ins</strong>).</li>
+        <li>Choose <strong>Upload My Add-in</strong>, browse to <code>offizin-manifest.xml</code>, and select <strong>Upload</strong>.</li>
+        <li>The <strong>Offizin</strong> tab appears in the ribbon. Select <strong>Publications</strong> to start.</li>
+      </ol>
+      <div class="callout"><strong>Good to know</strong>Word on the web remembers the add-in in this browser. In another browser, or after clearing browsing data, upload the manifest again. If you do not see Upload My Add-in, your organization has turned it off: ask your IT team to use the Whole organization steps.</div>
+    </section>
+
+    <section class="tab-panel" role="tabpanel" id="p-mac" aria-labelledby="t-mac" hidden>
+      <p>For Word for Mac with Microsoft 365, Office 2021, or Office 2024.</p>
+      <ol class="steps">
+        <li>Quit Word.</li>
+        <li>In Finder, choose <strong>Go</strong>, then <strong>Go to Folder</strong> (<kbd>Shift</kbd> <kbd>Command</kbd> <kbd>G</kbd>), and paste:<br><code>~/Library/Containers/com.microsoft.Word/Data/Documents/wef</code><br>If Finder says the folder does not exist, go to <code>~/Library/Containers/com.microsoft.Word/Data/Documents</code> and create a folder named <code>wef</code>.</li>
+        <li>Move <code>offizin-manifest.xml</code> into the <code>wef</code> folder.</li>
+        <li>Open Word and any document. Select <strong>Home</strong>, then <strong>Add-ins</strong>, and choose <strong>Offizin</strong>. The Offizin tab appears.</li>
+      </ol>
+      <p class="small muted">Prefer Terminal? This does steps 2 and 3, assuming the manifest is in Downloads:</p>
+      <div class="codebox"><pre><code>mkdir -p ~/Library/Containers/com.microsoft.Word/Data/Documents/wef
+cp ~/Downloads/offizin-manifest.xml ~/Library/Containers/com.microsoft.Word/Data/Documents/wef/</code></pre></div>
+    </section>
+
+    <section class="tab-panel" role="tabpanel" id="p-win" aria-labelledby="t-win" hidden>
+      <p>Word for Windows installs single add-ins from a shared folder, which takes a few more steps. If you have a Microsoft account, Word on the web is quicker, and your IT team can deploy Offizin to every computer at once.</p>
+      <ol class="steps">
+        <li>Create a folder for the manifest, for example <code>C:\OffizinAddin</code>, and move <code>offizin-manifest.xml</code> into it.</li>
+        <li>Right-click the folder, choose <strong>Properties</strong>, open the <strong>Sharing</strong> tab, and select <strong>Share</strong>. Share it with yourself, then copy the <strong>Network Path</strong> it shows, such as <code>\\YOUR-PC\OffizinAddin</code>.</li>
+        <li>In Word, choose <strong>File</strong>, <strong>Options</strong>, <strong>Trust Center</strong>, <strong>Trust Center Settings</strong>, then <strong>Trusted Add-in Catalogs</strong>.</li>
+        <li>Paste the network path into <strong>Catalog Url</strong>, select <strong>Add catalog</strong>, check <strong>Show in Menu</strong>, and select <strong>OK</strong>. Close and reopen Word.</li>
+        <li>Select <strong>Home</strong>, then <strong>Add-ins</strong>, then <strong>Advanced</strong> (or <strong>More Add-ins</strong>). Open <strong>Shared Folder</strong>, choose <strong>Offizin</strong>, and select <strong>Add</strong>.</li>
+      </ol>
+      <div class="callout"><strong>Good to know</strong>Microsoft describes the shared folder method for testing and single computers. For a business or school, the Whole organization steps are the supported way, and they also update everyone automatically.</div>
+    </section>
+
+    <section class="tab-panel" role="tabpanel" id="p-org" aria-labelledby="t-org" hidden>
+      <p>For Microsoft 365 business, enterprise, and education organizations. A Global Administrator or Exchange Administrator can deploy Offizin to everyone, to chosen groups, or to themselves first as a trial.</p>
+      <ol class="steps">
+        <li>Open the <a href="https://admin.microsoft.com">Microsoft 365 admin center</a> and go to <strong>Settings</strong>, then <strong>Integrated apps</strong>.</li>
+        <li>Select <strong>Upload custom apps</strong>. For the app type, choose <strong>Office Add-in</strong>.</li>
+        <li>Choose <strong>Provide link to the manifest file</strong>, paste <code id="org-url">https://offizin.alyssaagard.dev/word/manifest.xml</code>, and select <strong>Validate</strong>.</li>
+        <li>Choose who gets Offizin: <strong>Just me</strong> to try it, <strong>Specific users/groups</strong>, or the <strong>Entire organization</strong>. Then select <strong>Deploy</strong>.</li>
+        <li>Offizin appears in Word on the web, Windows, and Mac for those people, usually within a few hours and always within 24 hours.</li>
+      </ol>
+      <div class="callout"><strong>For IT reviews</strong>Offizin is a task pane add-in with Read/Write Document permission. Its files are static pages served from <span id="org-host">offizin.alyssaagard.dev</span> (GitHub Pages). It has no server, no account, no telemetry, and it makes no network calls with document content. Source code: <a href="https://github.com/alyssaagard/offizin">github.com/alyssaagard/offizin</a>.</div>
+    </section>
+
+    <h2>What works where</h2>
+    <div class="table-wrap">
+      <table class="plain">
+        <thead><tr><th>Word</th><th>Publications, parts, schemes, checker</th><th>Page setup and columns buttons</th></tr></thead>
+        <tbody>
+          <tr><td>Word on the web</td><td>Yes</td><td>Publications bring their own page size. To change it yourself, use Word's Layout tab.</td></tr>
+          <tr><td>Word for Windows, Microsoft 365</td><td>Yes</td><td>Yes, on version 2507 or later</td></tr>
+          <tr><td>Word for Mac, Microsoft 365</td><td>Yes</td><td>Yes, on version 16.99.2 or later</td></tr>
+          <tr><td>Word 2019, 2021, and 2024</td><td>Yes</td><td>Use Word's Layout tab</td></tr>
+          <tr><td>Word for iPad</td><td colspan="2">Not yet. iPad add-ins come from Microsoft's store, which is planned.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Updates and removal</h2>
+    <p>Offizin updates itself: Word loads the latest version from this website each time you open it, so there is nothing to reinstall. To remove it, open <strong>Home</strong>, <strong>Add-ins</strong>, then <strong>My Add-ins</strong> (Word on the web and Windows) and choose <strong>Remove</strong>. On a Mac, delete the manifest from the <code>wef</code> folder.</p>
+    <p>Questions? See <a href="../support/">Help</a>.</p>
+  </main>
+
+  <footer class="site-foot">
+    <div class="wrap">
+      <span>Offizin by Alyssa I. Agard. Open source under the MIT License. Not affiliated with Microsoft.</span>
+      <nav aria-label="Footer"><a href="../privacy/">Privacy</a><a href="../terms/">Terms</a><a href="../support/">Help</a></nav>
+    </div>
+  </footer>
+
+  <script>
+    // Tabs, with arrow key support.
+    (function () {
+      var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+      function select(tab) {
+        tabs.forEach(function (t) {
+          var on = t === tab;
+          t.setAttribute("aria-selected", String(on));
+          t.tabIndex = on ? 0 : -1;
+          document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+        });
+      }
+      tabs.forEach(function (t, i) {
+        t.addEventListener("click", function () { select(t); });
+        t.addEventListener("keydown", function (e) {
+          if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+          var next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+          select(next);
+          next.focus();
+        });
+      });
+      // Open the tab that matches this computer.
+      var p = navigator.platform || "";
+      if (/Mac/i.test(p)) select(document.getElementById("t-mac"));
+      else if (/Win/i.test(p)) select(document.getElementById("t-win"));
+    })();
+  </script>
+</body>
+</html>
