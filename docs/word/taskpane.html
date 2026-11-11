@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offizin</title>
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link rel="stylesheet" href="../app/ui/panel.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" id="template-fonts">
+  <style>
+    @font-face {
+      font-family: "Offizin Display";
+      src: url("../assets/fonts/CormorantGaramond-500-italic.woff") format("woff");
+      font-style: italic;
+      font-weight: 500;
+    }
+    html, body { height: 100%; margin: 0; }
+    #app { height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="app"><p style="padding:20px;font-family:system-ui,sans-serif">Loading Offizin...</p></div>
+  <script type="module">
+    import { googleFontsHref } from "../app/core/schemes.js";
+    import { createWordHost } from "../app/hosts/word.js";
+    import { mountPanel } from "../app/ui/panel.js";
+
+    // Preview fonts for computers that do not have a template's Word font installed.
+    document.getElementById("template-fonts").href = googleFontsHref();
+
+    const root = document.getElementById("app");
+    Office.onReady((info) => {
+      if (info.host !== Office.HostType.Word) {
+        root.innerHTML = '<p style="padding:20px;font-family:system-ui,sans-serif">Offizin for Word runs inside Microsoft Word. To try it in your browser, open the <a href="../try/">live demo</a>.</p>';
+        return;
+      }
+      root.innerHTML = "";
+      const panel = mountPanel(root, createWordHost(), { siteUrl: new URL("..", location.href).href.replace(/\/$/, "") });
+      const tab = new URLSearchParams(location.search).get("tab");
+      if (tab) panel.showTab(tab);
+    });
+  </script>
+</body>
+</html>

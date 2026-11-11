@@ -1,0 +1,27 @@
+{
+  "name": "offizin",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Offizin: desktop publishing for Microsoft Word and Google Docs. Brochures, newsletters, flyers, cards, and more, with no server.",
+  "author": "Alyssa I. Agard",
+  "license": "MIT",
+  "type": "module",
+  "homepage": "https://offizin.alyssaagard.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alyssaagard/offizin.git"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/check.mjs",
+    "serve": "node scripts/serve.mjs",
+    "brand": "node brand/make-brand-assets.mjs"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "2.6.2",
+    "opentype.js": "2.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

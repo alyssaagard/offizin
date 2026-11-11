@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offizin | Help</title>
+  <meta name="description" content="Answers to common questions about Offizin for Word and Google Docs, and how to report a problem.">
+  <meta name="theme-color" content="#FAF8F3">
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-head">
+    <div class="wrap">
+      <a class="brand" href="../" aria-label="Offizin home"><img src="../assets/brand/offizin-mark.svg" alt=""><span>Offizin</span></a>
+      <nav class="nav" aria-label="Main">
+        <a href="../try/">Try it</a>
+        <a href="../word/">Word</a>
+        <a href="../google-docs/">Google Docs</a>
+        <a href="./" aria-current="page">Help</a>
+        <a href="https://github.com/alyssaagard/offizin">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <h1 class="page-title">Help</h1>
+    <p class="lead">Quick answers first. If something is not covered here, <a href="https://github.com/alyssaagard/offizin/issues/new/choose">report a problem or ask a question on GitHub</a>.</p>
+
+    <h2>Getting started</h2>
+    <details class="faq"><summary>Is Offizin really free, including for businesses?</summary><p>Yes. Offizin is open source under the MIT License, which allows personal, commercial, nonprofit, government, and enterprise use at no cost. See the <a href="../terms/">terms</a>.</p></details>
+    <details class="faq"><summary>Do I need an account?</summary><p>No. You need Microsoft Word or Google Docs, and that is all. Offizin has no sign-up and no server.</p></details>
+    <details class="faq"><summary>How do I make my first publication?</summary><p>Open Offizin, enter your details on the <strong>Info</strong> tab, pick colors and fonts on the <strong>Design</strong> tab, then choose a publication on the <strong>Create</strong> tab and select <strong>Create publication</strong>. Replace the sample text and pictures, then use <strong>Check</strong> to find anything you missed.</p></details>
+    <details class="faq"><summary>How do I replace a picture placeholder?</summary><p>In Word, right-click the placeholder and choose <strong>Change Picture</strong>. In Google Docs, select it, then choose <strong>Replace image</strong> in the toolbar (or right-click it). The new picture keeps the placeholder's size and place.</p></details>
+    <details class="faq"><summary>Can I change colors or fonts after I make a publication?</summary><p>Yes. Pick a new scheme on the <strong>Design</strong> tab and select <strong>Apply this design to the publication</strong>. Your text stays. Pictures keep their own colors. If you change your mind, use Undo.</p></details>
+
+    <h2>Printing</h2>
+    <details class="faq"><summary>How do I print a brochure on both sides?</summary><p>Print side 1, put the paper back in the printer, and print side 2. With automatic two-sided printing, choose <strong>flip on short edge</strong> for landscape publications. The <strong>Check</strong> tab has folding diagrams for each publication type.</p></details>
+    <details class="faq"><summary>Why does my printer leave a white border?</summary><p>Most home printers cannot print to the very edge of the paper, so Offizin keeps content inside a safe margin. For color that runs off the edge, send a PDF to a print shop and ask about bleed.</p></details>
+    <details class="faq"><summary>My business cards or labels do not line up.</summary><p>Print at actual size (100%), with any "fit to page" option turned off. Print a test on plain paper and hold it over the card or label sheet against a window. If everything is off by the same amount, adjust the page margins in Word's Layout tab or Google Docs' Page setup.</p></details>
+    <details class="faq"><summary>How do I make a PDF?</summary><p>In Word, choose <strong>File</strong>, then <strong>Save As</strong> or <strong>Export</strong>, and pick PDF. In Google Docs, choose <strong>File</strong>, <strong>Download</strong>, then <strong>PDF document</strong>.</p></details>
+
+    <h2>Word</h2>
+    <details class="faq"><summary>The page size did not change in Word on the web.</summary><p>Publications from the Create tab bring their own page size. If yours did not change, choose <strong>Layout</strong>, then <strong>Size</strong>, then <strong>More Paper Sizes</strong>, and enter the size Offizin showed. Word on the web does not yet let add-ins change page size directly, so the Page setup buttons appear only in Word for Windows and Mac.</p></details>
+    <details class="faq"><summary>I do not see Upload My Add-in.</summary><p>Your organization has turned off personal add-in uploads. Ask your IT team to deploy Offizin from the Microsoft 365 admin center. The steps are on the <a href="../word/">Word page</a> under Whole organization.</p></details>
+    <details class="faq"><summary>I used Layout Toolkit before. What changed?</summary><p>Layout Toolkit is now Offizin. The old version still works where it is installed, but it no longer receives updates. Install Offizin from the <a href="../word/">Word page</a>, then remove Layout Toolkit from <strong>My Add-ins</strong>.</p></details>
+
+    <h2>Google Docs</h2>
+    <details class="faq"><summary>Google says the app is not verified.</summary><p>Because you pasted Offizin into your document yourself, it is your own private script and Google has not reviewed it. Select <strong>Advanced</strong>, then <strong>Go to Offizin (unsafe)</strong>. Offizin can only change the document it is in. Details are on the <a href="../google-docs/#permissions">Google Docs page</a>.</p></details>
+    <details class="faq"><summary>The Offizin menu does not appear.</summary><p>Reload the document. If it still does not appear, open <strong>Extensions</strong>, <strong>Apps Script</strong>, and check that the files are named exactly <code>Code.gs</code> and <code>Sidebar.html</code>, then save again.</p></details>
+    <details class="faq"><summary>My logo disappears in Google Docs.</summary><p>Google's settings storage is too small for pictures, so Offizin keeps your logo in your browser. If your browser blocks storage for the sidebar, add the logo again each session, or keep it in a brand kit file on the Info tab.</p></details>
+    <details class="faq" id="workspace"><summary>How can a Google Workspace administrator publish Offizin for the whole organization?</summary>
+      <p>Google allows private add-ons for one Workspace organization through the Google Workspace Marketplace SDK. In outline:</p>
+      <ol>
+        <li>Create a standalone Apps Script project (script.google.com) owned by an account in your organization, and add the three Offizin files.</li>
+        <li>Link it to a standard Google Cloud project, configure the OAuth consent screen as Internal, and enable the Google Workspace Marketplace SDK.</li>
+        <li>Create a versioned deployment, then in the Marketplace SDK fill in the app configuration (Docs add-on) and the store listing, and choose <strong>Private</strong> visibility.</li>
+        <li>Publish, then install it for your domain from the Google Workspace Marketplace.</li>
+      </ol>
+      <p>Google's guide: <a href="https://developers.google.com/workspace/marketplace/how-to-publish">Publish an app to the Google Workspace Marketplace</a>. A public Marketplace listing for Offizin is planned.</p>
+    </details>
+
+    <h2>Report a problem</h2>
+    <p>Open an issue at <a href="https://github.com/alyssaagard/offizin/issues/new/choose">github.com/alyssaagard/offizin/issues</a>. Say whether you use Word or Google Docs, on the web, Windows, or Mac, and what you expected to happen. Please do not attach documents that contain private information.</p>
+  </main>
+
+  <footer class="site-foot">
+    <div class="wrap">
+      <span>Offizin by Alyssa I. Agard. Open source under the MIT License.</span>
+      <nav aria-label="Footer"><a href="../privacy/">Privacy</a><a href="../terms/">Terms</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,32 @@
+name: Report a problem
+description: Something in Offizin does not work as expected.
+labels: ["problem"]
+body:
+  - type: dropdown
+    id: app
+    attributes:
+      label: Where do you use Offizin?
+      options:
+        - Word on the web
+        - Word for Windows
+        - Word for Mac
+        - Google Docs
+        - The website demo
+    validations:
+      required: true
+  - type: input
+    id: publication
+    attributes:
+      label: Which publication or tab?
+      placeholder: For example, tri-fold brochure, or the Check tab
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: Steps to repeat it help most. Please do not attach documents with private information.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Word or browser version, if you know it

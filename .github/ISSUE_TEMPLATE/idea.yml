@@ -1,0 +1,15 @@
+name: Suggest a template or feature
+description: A publication, page part, or feature you would like in Offizin.
+labels: ["idea"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Offizin to do?
+      description: For a template, describe what it is for and the paper size.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: How would you use it?
