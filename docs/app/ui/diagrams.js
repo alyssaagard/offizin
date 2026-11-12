@@ -5,7 +5,7 @@
 
 const SHEET = "fill:var(--oz-sheet);stroke:var(--oz-line);stroke-width:1";
 const FOLD = "stroke:var(--oz-fold);stroke-width:1.2;stroke-dasharray:4 3";
-const ARROW = "fill:none;stroke:var(--oz-accent);stroke-width:1.6";
+const ARROW = "fill:none;stroke:var(--oz-accent-strong);stroke-width:1.6";
 const TEXT = "font:600 8px system-ui,sans-serif;fill:var(--oz-muted)";
 
 const arrowHead = (x, y) => `<path d="M${x - 3} ${y + 5} L${x} ${y} L${x + 3} ${y + 5}" style="${ARROW}"/>`;

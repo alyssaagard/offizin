@@ -3,15 +3,15 @@
  * Cormorant Garamond Italic 500 (SIL Open Font License, see fonts/OFL.txt),
  * the same face Cachet uses, so the two products read as one family.
  *
- * The mark is a sheet of ivory paper with a gold folded corner and an italic "O".
- * Cachet's mark is a round seal; Offizin's is a printed page.
+ * The mark is a white sheet of paper with a pastel blue edge, a blue folded corner, and an
+ * italic "O" in deep navy. Cachet's mark is a round seal; Offizin's is a printed page.
  *
  * Usage, from the repository root:
  *   npm install
  *   npm run brand
  *
  * Output:
- *   docs/assets/brand/  offizin-mark.svg, offizin-logo.svg/.png, offizin-logo-ivory.png,
+ *   docs/assets/brand/  offizin-mark.svg, offizin-logo.svg/.png, offizin-logo-solid.png,
  *                       offizin-wordmark.svg/.png, offizin-wordmark-reverse.png, offizin-social.png
  *   docs/assets/icons/  icon-16 ... icon-512.png (Office ribbon, Google, home screens)
  *   docs/favicon.ico, docs/favicon.svg, docs/apple-touch-icon.png
@@ -29,10 +29,12 @@ const ICON_DIR = path.join(ROOT, "docs/assets/icons");
 const SITE_DIR = path.join(ROOT, "docs");
 
 export const COLORS = {
-  ink: "#1A1A1A",
-  ivory: "#FAF8F3",
-  gold: "#A88B5C",
-  ring: "#CDBEA0", // soft tan edge so the light sheet reads on light ribbons
+  ink: "#1C2B3A", // deep navy for the "O" and the wordmark
+  paper: "#FBFDFF", // the sheet
+  edge: "#A7C7E7", // pastel blue edge, so the light sheet reads on light ribbons
+  accent: "#6FA3D6", // the folded corner and icon accents
+  dot: "#5B9BD5", // the dot of the final "i"
+  wash: "#EAF3FB", // light blue backgrounds
 };
 
 const font = opentype.parse(fs.readFileSync(FONT_FILE).buffer);
@@ -64,7 +66,7 @@ function contours(p) {
 }
 
 /**
- * The wordmark "Offizin": the font's own ffi ligature, with the dot of the final "i" in gold.
+ * The wordmark "Offizin": the font's own ffi ligature, with the dot of the final "i" in blue.
  * Returns SVG paths positioned on a baseline at y = 0, and the overall bounding box.
  */
 function wordmarkPaths(size, letterColor, dotColor) {
@@ -85,7 +87,7 @@ function wordmarkPaths(size, letterColor, dotColor) {
     const isLastI = index === glyphs.length - 2 && g.name === "i";
     if (isLastI) {
       const pieces = contours(p).sort((a, c) => a.getBoundingBox().y1 - c.getBoundingBox().y1);
-      // Enlarge the gold dot around its own center, as Cachet enlarges its gold period.
+      // Enlarge the dot around its own center, as Cachet enlarges its period.
       const d = pieces[0].getBoundingBox();
       const cx = x + (d.x1 + d.x2) / 2;
       const cy = (d.y1 + d.y2) / 2;
@@ -112,7 +114,7 @@ function monogram(boxSize, { height = 0.56, color = COLORS.ink, shiftX = 0, shif
 }
 
 /**
- * The mark: an ivory sheet with a tan edge, a gold folded corner, and the italic "O".
+ * The mark: a white sheet with a pastel blue edge, a blue folded corner, and the italic "O".
  * `pixels` is the final size, used to keep the edge at least one pixel wide and to thicken the "O".
  */
 function markSvg(pixels = 512) {
@@ -128,38 +130,38 @@ function markSvg(pixels = 512) {
   const flap = `M${B - fold} 0 V${fold - 30} Q${B - fold} ${fold} ${B - fold + 30} ${fold} H${B} Z`;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${B} ${B}" width="${pixels}" height="${pixels}">` +
     `<title>Offizin</title>` +
-    `<path d="${outer}" fill="${COLORS.ring}"/>` +
-    `<path d="${inner}" fill="${COLORS.ivory}"/>` +
-    `<path d="${flap}" fill="${COLORS.gold}"/>` +
+    `<path d="${outer}" fill="${COLORS.edge}"/>` +
+    `<path d="${inner}" fill="${COLORS.paper}"/>` +
+    `<path d="${flap}" fill="${COLORS.accent}"/>` +
     monogram(B, { height: 0.58, shiftX: -0.025, shiftY: 0.02, extra }) +
     `</svg>`;
 }
 
 /**
  * Ribbon button icons for Word: Publications, Design, Page Parts, Business Info, Check and Print.
- * Ivory shapes with ink outlines and a gold accent read on both light and dark ribbons.
+ * Light shapes with navy outlines and a blue accent read on both light and dark ribbons.
  */
 function ribbonIconSvg(name, pixels) {
   const sw = pixels <= 16 ? 2.4 : pixels <= 32 ? 1.8 : 1.4; // stroke width in a 32 unit box
   const ink = `stroke="${COLORS.ink}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"`;
   const sheet = (x = 6, y = 3, w = 20, h = 26, f = 6) =>
-    `<path d="M${x} ${y} H${x + w - f} L${x + w} ${y + f} V${y + h} H${x} Z" fill="${COLORS.ivory}" ${ink}/>` +
-    `<path d="M${x + w - f} ${y} V${y + f} H${x + w} Z" fill="${COLORS.gold}" ${ink}/>`;
+    `<path d="M${x} ${y} H${x + w - f} L${x + w} ${y + f} V${y + h} H${x} Z" fill="${COLORS.paper}" ${ink}/>` +
+    `<path d="M${x + w - f} ${y} V${y + f} H${x + w} Z" fill="${COLORS.accent}" ${ink}/>`;
   const shapes = {
     create: sheet() + `<path d="M16 11 V23 M10 17 H22" fill="none" ${ink}/>`,
     design:
-      `<circle cx="12" cy="13" r="8" fill="${COLORS.ivory}" ${ink}/>` +
-      `<circle cx="20" cy="13" r="8" fill="${COLORS.gold}" fill-opacity="0.85" ${ink}/>` +
-      `<circle cx="16" cy="20.5" r="8" fill="${COLORS.ivory}" fill-opacity="0.9" ${ink}/>`,
+      `<circle cx="12" cy="13" r="8" fill="${COLORS.paper}" ${ink}/>` +
+      `<circle cx="20" cy="13" r="8" fill="${COLORS.accent}" fill-opacity="0.85" ${ink}/>` +
+      `<circle cx="16" cy="20.5" r="8" fill="${COLORS.edge}" fill-opacity="0.9" ${ink}/>`,
     insert:
       sheet() +
-      `<rect x="9.5" y="11" width="13" height="7" fill="${COLORS.gold}" ${ink}/>` +
+      `<rect x="9.5" y="11" width="13" height="7" fill="${COLORS.edge}" ${ink}/>` +
       `<path d="M9.5 22 H22.5 M9.5 25.5 H18" fill="none" ${ink}/>`,
     info:
-      `<rect x="3" y="7" width="26" height="18" rx="2" fill="${COLORS.ivory}" ${ink}/>` +
-      `<circle cx="10.5" cy="14" r="3" fill="${COLORS.gold}" ${ink}/>` +
+      `<rect x="3" y="7" width="26" height="18" rx="2" fill="${COLORS.paper}" ${ink}/>` +
+      `<circle cx="10.5" cy="14" r="3" fill="${COLORS.accent}" ${ink}/>` +
       `<path d="M6.5 21 Q10.5 16.5 14.5 21 M18 12.5 H25 M18 16.5 H25 M18 20.5 H22.5" fill="none" ${ink}/>`,
-    check: sheet() + `<path d="M10.5 17.5 L14.5 21.5 L22 12.5" fill="none" stroke="${COLORS.gold}" stroke-width="${sw * 1.6}" stroke-linecap="round" stroke-linejoin="round"/>`,
+    check: sheet() + `<path d="M10.5 17.5 L14.5 21.5 L22 12.5" fill="none" stroke="${COLORS.dot}" stroke-width="${sw * 1.6}" stroke-linecap="round" stroke-linejoin="round"/>`,
   };
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="${pixels}" height="${pixels}">${shapes[name]}</svg>`;
 }
@@ -177,7 +179,7 @@ function wordmarkSvg(letterColor, dotColor, pad = 0.18) {
 function logoSvg(background) {
   const S = 1000;
   const markSize = 380;
-  const { svg, box } = wordmarkPaths(250, COLORS.ink, COLORS.gold);
+  const { svg, box } = wordmarkPaths(250, COLORS.ink, COLORS.dot);
   const wmWidth = box.x2 - box.x1;
   const wmX = (S - wmWidth) / 2 - box.x1;
   const wmBaseline = 800;
@@ -192,15 +194,15 @@ function logoSvg(background) {
 function socialSvg() {
   const W = 1280;
   const H = 640;
-  const { svg, box } = wordmarkPaths(210, COLORS.ink, COLORS.gold);
+  const { svg, box } = wordmarkPaths(210, COLORS.ink, COLORS.dot);
   const mark = markSvg(512).replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "").replace(/<title>.*?<\/title>/, "");
   const markSize = 230;
   const gap = 56;
   const total = markSize + gap + (box.x2 - box.x1);
   const left = (W - total) / 2;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">` +
-    `<rect width="${W}" height="${H}" fill="${COLORS.ivory}"/>` +
-    `<rect x="24" y="24" width="${W - 48}" height="${H - 48}" fill="none" stroke="${COLORS.ring}" stroke-width="2"/>` +
+    `<rect width="${W}" height="${H}" fill="${COLORS.wash}"/>` +
+    `<rect x="24" y="24" width="${W - 48}" height="${H - 48}" fill="none" stroke="${COLORS.edge}" stroke-width="2"/>` +
     `<g transform="translate(${left} ${(H - markSize) / 2 - 40}) scale(${markSize / 512})">${mark}</g>` +
     `<g transform="translate(${(left + markSize + gap - box.x1).toFixed(1)} ${H / 2 + 30})">${svg}</g>` +
     `</svg>`;
@@ -258,17 +260,17 @@ function main() {
   write(path.join(SITE_DIR, "favicon.svg"), markSvg(32));
   write(path.join(SITE_DIR, "favicon.ico"), ico([16, 32, 48].map((size) => ({ size, data: png(markSvg(size), size) }))));
 
-  // Phones show transparency as black, so the home screen icon sits on an ivory square.
-  const apple = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180"><rect width="180" height="180" fill="${COLORS.ivory}"/><g transform="translate(18 18) scale(${144 / 512})">${markSvg(512).replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "")}</g></svg>`;
+  // Phones show transparency as black, so the home screen icon sits on a light blue square.
+  const apple = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180"><rect width="180" height="180" fill="${COLORS.wash}"/><g transform="translate(18 18) scale(${144 / 512})">${markSvg(512).replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "")}</g></svg>`;
   write(path.join(SITE_DIR, "apple-touch-icon.png"), png(apple, 180));
 
-  write(path.join(BRAND_DIR, "offizin-wordmark.svg"), wordmarkSvg(COLORS.ink, COLORS.gold));
-  write(path.join(BRAND_DIR, "offizin-wordmark.png"), png(wordmarkSvg(COLORS.ink, COLORS.gold), 1600));
-  write(path.join(BRAND_DIR, "offizin-wordmark-reverse.png"), png(wordmarkSvg(COLORS.ivory, COLORS.gold), 1600));
+  write(path.join(BRAND_DIR, "offizin-wordmark.svg"), wordmarkSvg(COLORS.ink, COLORS.dot));
+  write(path.join(BRAND_DIR, "offizin-wordmark.png"), png(wordmarkSvg(COLORS.ink, COLORS.dot), 1600));
+  write(path.join(BRAND_DIR, "offizin-wordmark-reverse.png"), png(wordmarkSvg("#FFFFFF", COLORS.edge), 1600));
 
   write(path.join(BRAND_DIR, "offizin-logo.svg"), logoSvg(null));
   write(path.join(BRAND_DIR, "offizin-logo.png"), png(logoSvg(null), 1000));
-  write(path.join(BRAND_DIR, "offizin-logo-ivory.png"), png(logoSvg(COLORS.ivory), 1000));
+  write(path.join(BRAND_DIR, "offizin-logo-solid.png"), png(logoSvg(COLORS.wash), 1000));
   write(path.join(BRAND_DIR, "offizin-social.png"), png(socialSvg(), 1280));
 
   console.log("Brand assets written to docs/assets.");
