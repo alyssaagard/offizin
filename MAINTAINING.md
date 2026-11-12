@@ -58,4 +58,4 @@ When Code.gs changes, update the three files in the starter document as well.
 
 ## Brand assets
 
-`npm install` then `npm run brand` regenerates every logo, icon, and favicon from `brand/fonts/CormorantGaramond-500-italic.woff` (the Cachet font). Outputs go to `docs/assets/`, `docs/favicon.*`, and `docs/app/ui/mark.js`. For the GitHub social preview, upload `docs/assets/brand/offizin-social.png` under Settings, General, Social preview.
+`npm install` then `npm run brand` regenerates every logo, icon, and favicon from `brand/fonts/CormorantGaramond-500-italic.woff` (the same typeface as Cachet). Outputs go to `docs/assets/`, `docs/favicon.*`, and `docs/app/ui/mark.js`. For the GitHub social preview, upload `docs/assets/brand/offizin-social.png` under Settings, General, Social preview.

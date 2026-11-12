@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/brand/offizin-logo-ivory.png" alt="Offizin" width="260">
+  <img src="docs/assets/brand/offizin-logo-solid.png" alt="Offizin" width="260">
 </p>
 
 <p align="center"><strong>Desktop publishing for Microsoft Word and Google Docs.</strong><br>
