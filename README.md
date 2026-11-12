@@ -7,7 +7,7 @@ Brochures, newsletters, flyers, cards, and more, built from templates in your ow
 
 <p align="center">
   <a href="https://offizin.alyssaagard.dev">Website</a> &nbsp;|&nbsp;
-  <a href="https://offizin.alyssaagard.dev/try/">Try it in your browser</a> &nbsp;|&nbsp;
+  <a href="https://offizin.alyssaagard.dev/demo/">Try it in your browser</a> &nbsp;|&nbsp;
   <a href="https://offizin.alyssaagard.dev/word/">Install for Word</a> &nbsp;|&nbsp;
   <a href="https://offizin.alyssaagard.dev/google-docs/">Install for Google Docs</a>
 </p>
@@ -31,7 +31,7 @@ Microsoft Publisher reached its end of life in October 2026. Offizin keeps the p
 | Guides and print help | On-screen margin and fold guides, folding diagrams, and printing tips for each publication type. |
 | Brand kit | Save colors, fonts, information sets, and logo as one file to share with a team. |
 
-Try all of it, with no install, at **[offizin.alyssaagard.dev/try](https://offizin.alyssaagard.dev/try/)**. The demo can also download any publication as a Word file, which Google Docs opens too.
+Try all of it, with no install, at **[offizin.alyssaagard.dev/demo](https://offizin.alyssaagard.dev/demo/)**. The demo can also download any publication as a Word file, which Google Docs opens too.
 
 ## Install
 
@@ -62,7 +62,7 @@ offizin/
     app/ui/                   The panel used by all three
     word/                     Word task pane and manifest
     google-docs/              Built Google Docs files for the install page
-    try/                      The live demo
+    demo/                     The live demo (try/ redirects here)
   google-docs/                Apps Script source: Code.gs, appsscript.json, sidebar template
   brand/                      Logo generator and the logo font (SIL Open Font License)
   scripts/                    Build, checks, local server, and site settings

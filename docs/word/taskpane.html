@@ -33,7 +33,7 @@
     const root = document.getElementById("app");
     Office.onReady((info) => {
       if (info.host !== Office.HostType.Word) {
-        root.innerHTML = '<p style="padding:20px;font-family:system-ui,sans-serif">Offizin for Word runs inside Microsoft Word. To try it in your browser, open the <a href="../try/">live demo</a>.</p>';
+        root.innerHTML = '<p style="padding:20px;font-family:system-ui,sans-serif">Offizin for Word runs inside Microsoft Word. To try it in your browser, open the <a href="../demo/">live demo</a>.</p>';
         return;
       }
       root.innerHTML = "";
