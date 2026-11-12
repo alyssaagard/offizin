@@ -20,7 +20,7 @@
     <div class="wrap">
       <a class="brand" href="./" aria-label="Offizin home"><img src="assets/brand/offizin-mark.svg" alt=""><span>Offizin</span></a>
       <nav class="nav" aria-label="Main">
-        <a href="try/">Try it</a>
+        <a href="demo/">Demo</a>
         <a href="word/">Word</a>
         <a href="google-docs/">Google Docs</a>
         <a href="support/">Help</a>
@@ -36,7 +36,7 @@
         <h1 class="display">Make it look printed, not typed.</h1>
         <p class="lead">Offizin puts a publishing studio inside the word processor you already use. Pick a brochure, newsletter, flyer, card, or calendar, and it arrives in your colors, your fonts, and your business details, ready to print and fold.</p>
         <div class="btn-row">
-          <a class="btn btn-primary" href="try/">Try it in your browser</a>
+          <a class="btn btn-primary" href="demo/">Try it in your browser</a>
           <a class="btn" href="word/">Add to Word</a>
           <a class="btn" href="google-docs/">Add to Google Docs</a>
         </div>
@@ -141,7 +141,7 @@
     for (const t of TEMPLATES) {
       const a = document.createElement("a");
       a.className = "tile";
-      a.href = "try/#template=" + t.id;
+      a.href = "demo/#template=" + t.id;
       a.innerHTML = `<span class="tile-art"></span><b></b><span></span>`;
       a.querySelector("b").textContent = t.name;
       a.querySelector("span:last-child").textContent = t.sizeLabel;
