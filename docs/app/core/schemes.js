@@ -112,7 +112,75 @@ export function findColorScheme(id) {
   return COLOR_SCHEMES.find((s) => s.id === id) || COLOR_SCHEMES[0];
 }
 
-export function findFontScheme(id) {
+/**
+ * Fonts people can pick for their own font scheme. Word fonts come with Microsoft 365
+ * (installed on Windows and Mac, and available as cloud fonts in Word on the web).
+ * Google fonts are Google Fonts families that Google Docs offers by name.
+ * `css` is the preview fallback stack.
+ */
+export const WORD_FONT_CHOICES = [
+  { name: "Aptos", css: "Aptos, 'Segoe UI', sans-serif" },
+  { name: "Aptos Display", css: "'Aptos Display', Aptos, 'Segoe UI', sans-serif" },
+  { name: "Arial", css: "Arial, Helvetica, sans-serif" },
+  { name: "Bookman Old Style", css: "'Bookman Old Style', Georgia, serif" },
+  { name: "Calibri", css: "Calibri, Carlito, sans-serif" },
+  { name: "Cambria", css: "Cambria, Caladea, serif" },
+  { name: "Century Gothic", css: "'Century Gothic', Montserrat, sans-serif" },
+  { name: "Constantia", css: "Constantia, Georgia, serif" },
+  { name: "Corbel", css: "Corbel, 'Segoe UI', sans-serif" },
+  { name: "Franklin Gothic Medium", css: "'Franklin Gothic Medium', 'Arial Narrow', sans-serif" },
+  { name: "Garamond", css: "Garamond, 'EB Garamond', serif" },
+  { name: "Georgia", css: "Georgia, serif" },
+  { name: "Gill Sans MT", css: "'Gill Sans MT', 'Gill Sans', sans-serif" },
+  { name: "Palatino Linotype", css: "'Palatino Linotype', Palatino, serif" },
+  { name: "Rockwell", css: "Rockwell, 'Roboto Slab', serif" },
+  { name: "Segoe UI", css: "'Segoe UI', system-ui, sans-serif" },
+  { name: "Times New Roman", css: "'Times New Roman', Times, serif" },
+  { name: "Trebuchet MS", css: "'Trebuchet MS', sans-serif" },
+  { name: "Verdana", css: "Verdana, sans-serif" },
+];
+
+export const GOOGLE_FONT_CHOICES = [
+  { name: "Arial", css: "Arial, Helvetica, sans-serif" },
+  { name: "Cormorant Garamond", css: "'Cormorant Garamond', Garamond, serif" },
+  { name: "EB Garamond", css: "'EB Garamond', Garamond, serif" },
+  { name: "Georgia", css: "Georgia, serif" },
+  { name: "Inter", css: "Inter, sans-serif" },
+  { name: "Lato", css: "Lato, sans-serif" },
+  { name: "Libre Baskerville", css: "'Libre Baskerville', serif" },
+  { name: "Lora", css: "Lora, serif" },
+  { name: "Merriweather", css: "Merriweather, serif" },
+  { name: "Montserrat", css: "Montserrat, sans-serif" },
+  { name: "Nunito", css: "Nunito, sans-serif" },
+  { name: "Open Sans", css: "'Open Sans', sans-serif" },
+  { name: "Oswald", css: "Oswald, sans-serif" },
+  { name: "Playfair Display", css: "'Playfair Display', serif" },
+  { name: "Raleway", css: "Raleway, sans-serif" },
+  { name: "Roboto", css: "Roboto, sans-serif" },
+  { name: "Roboto Slab", css: "'Roboto Slab', serif" },
+  { name: "Source Sans 3", css: "'Source Sans 3', sans-serif" },
+  { name: "Times New Roman", css: "'Times New Roman', Times, serif" },
+  { name: "Verdana", css: "Verdana, sans-serif" },
+];
+
+const cssFor = (list, name, generic) => (list.find((f) => f.name === name) || { css: `'${name}', ${generic}` }).css;
+
+/**
+ * A font scheme by ID. "custom" builds one from the user's own picks:
+ * customFonts = { heading: { word, google }, body: { word, google }, headingBold }.
+ */
+export function findFontScheme(id, customFonts) {
+  if (id === "custom" && customFonts && customFonts.heading && customFonts.body) {
+    const h = customFonts.heading;
+    const b = customFonts.body;
+    return {
+      id: "custom",
+      name: "Your fonts",
+      headingBold: customFonts.headingBold !== false,
+      heading: { word: h.word || "Georgia", google: h.google || "Georgia", css: cssFor(WORD_FONT_CHOICES, h.word || "Georgia", "serif") },
+      body: { word: b.word || "Arial", google: b.google || "Arial", css: cssFor(WORD_FONT_CHOICES, b.word || "Arial", "sans-serif") },
+    };
+  }
   return FONT_SCHEMES.find((s) => s.id === id) || FONT_SCHEMES[0];
 }
 

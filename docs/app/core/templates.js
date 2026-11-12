@@ -1,8 +1,8 @@
 /**
  * The Offizin publication library and page parts.
  *
- * Each template describes one publication with simple blocks:
- *   p (paragraph), list, rule, spacer, break (new page), image, band, grid, table.
+ * Each template describes one publication with the blocks in dsl.js:
+ *   p (paragraph), list, rule, spacer, break (new page), image, band, grid, table, columns, scope.
  * Text can use business information fields such as {org} and {phone}, which the composer
  * fills from the user's business information (or friendly samples until it is filled in).
  * "**bold**" marks bold words inside a paragraph.
@@ -11,50 +11,9 @@
  * of the page inside its margins. See compose.js for everything the composer accepts.
  */
 import { inch, mm, round, MONTHS, WEEKDAYS } from "./util.js";
-
-// ---------------------------------------------------------------------------
-// Block helpers
-// ---------------------------------------------------------------------------
-
-const p = (text, role = "body", o = {}) => ({ t: "p", text, role, ...o });
-const list = (items, o = {}) => ({ t: "list", items, role: "body", ...o });
-const rule = (o = {}) => ({ t: "rule", ...o });
-const space = (height) => ({ t: "spacer", height });
-const pageBreak = () => ({ t: "break" });
-const pic = (width, height, o = {}) => ({ t: "image", kind: "photo", width, height, ...o });
-const logoBox = (width, height, o = {}) => ({ t: "image", kind: "logo", width, height, ...o });
-const band = (blocks, o = {}) => ({ t: "band", blocks, ...o });
-const grid = (widths, rows, o = {}) => ({ t: "grid", widths, rows, ...o });
-const cell = (blocks, o = {}) => ({ blocks, ...o });
-const table = (header, rows, o = {}) => ({ t: "table", header, rows, ...o });
-
-/** A label with the value under it, used for dates, times, and places. */
-const detail = (label, value, o = {}) => [p(label, "label", { align: o.align || "center", color: o.labelColor || "accent", fixed: true }), p(value, "h2", { align: o.align || "center", after: 0, color: o.color, size: o.size })];
-
-/** Contact lines from business information. */
-const contactLines = (o = {}) => [
-  p("{address}\n{city}", "small", { align: o.align, color: o.color, after: 4 }),
-  p("{phone}\n{email}\n{web}", "small", { align: o.align, color: o.color, after: 0 }),
-];
-
-/** Logo when the user has one, otherwise the organization name set as a wordmark. */
-const brandMark = (ctx, w, h, o = {}) =>
-  ctx.hasLogo ? logoBox(w, h, { align: o.align || "left", after: o.after ?? 8 }) : p("{org}", "h2", { align: o.align || "left", color: o.color || "primary", after: o.after ?? 6, size: o.size });
-
-const panelFolds = (n) => () => ({ vertical: Array.from({ length: n - 1 }, (_, i) => (i + 1) / n), horizontal: [] });
-
-const PANEL_PAD = 20;
-const panelPad = (i, n) => [PANEL_PAD, i === n - 1 ? 4 : PANEL_PAD, PANEL_PAD, i === 0 ? 4 : PANEL_PAD];
-
-/** Sheet layout for cards and labels: where a grid of equal pieces sits on the page. */
-function sheetMargins(paper, pieceW, pieceH, across, down, gapX = 0, gapY = 0) {
-  const page = paper === "a4" ? { width: mm(210), height: mm(297) } : { width: 612, height: 792 };
-  const usedW = across * pieceW + (across - 1) * gapX;
-  const usedH = down * pieceH + (down - 1) * gapY;
-  const side = round((page.width - usedW) / 2);
-  const top = round((page.height - usedH) / 2);
-  return { top, bottom: top, left: side, right: side };
-}
+import { p, list, rule, space, pageBreak, pic, logoBox, band, grid, cell, table, columns, scope, detail, contactLines, brandMark, panelFolds, panelPad, PANEL_PAD, sheetMargins, CUT_GUIDE, chunk } from "./dsl.js";
+import { RESUME_TEMPLATES } from "./templates/resumes.js";
+import { MORE_TEMPLATES, MORE_FOLD_GUIDES } from "./templates/more.js";
 
 // ---------------------------------------------------------------------------
 // Publications
@@ -64,14 +23,62 @@ export const CATEGORIES = [
   { id: "all", name: "All" },
   { id: "brochures", name: "Brochures" },
   { id: "newsletters", name: "Newsletters" },
-  { id: "flyers", name: "Flyers and posters" },
+  { id: "flyers", name: "Flyers, posters, and signs" },
   { id: "cards", name: "Cards and invitations" },
-  { id: "programs", name: "Programs and menus" },
-  { id: "stationery", name: "Stationery and labels" },
+  { id: "programs", name: "Programs, booklets, and menus" },
+  { id: "stationery", name: "Stationery and envelopes" },
+  { id: "labels", name: "Labels, badges, and tickets" },
+  { id: "resumes", name: "Resumes and CVs" },
   { id: "calendars", name: "Calendars and certificates" },
 ];
 
-export const TEMPLATES = [
+const FLAT_SIZES = ["letter", "legal", "tabloid", "halfLetter", "a3", "a4", "a5"];
+
+/** One certificate page, for a merge record or for the sample recipient. */
+function certificatePage(ctx, r) {
+  const recipient = r && r.recipient ? r.recipient : "Recipient Name";
+  const reason = r && r.reason ? r.reason : "in recognition of outstanding dedication, leadership, and service during the past year.";
+  const date = r && r.date ? r.date : "Date";
+      const inner = [
+        p("{org}", "kicker", { align: "center", after: 14 }),
+        p("Certificate of Achievement", "title", { align: "center", size: 34 }),
+        rule({ color: "accent", weight: 1.5, width: 80, align: "center", before: 4, after: 16 }),
+        p("This certificate is proudly presented to", "body", { align: "center", italic: true, color: "muted", after: 10 }),
+        p(recipient, "display", { align: "center", size: 40, color: "accent", italic: true, after: 12, fixed: !!(r && r.recipient) }),
+        p(reason, "body", { align: "center", size: 12, after: 30, fixed: !!(r && r.reason) }),
+        grid(
+          [1, 0.3, 1],
+          [
+            [
+              cell([rule({ color: "dark", weight: 0.75, before: 0, after: 4 }), p("{name}, {title}", "small", { align: "center", after: 0 })]),
+              cell([]),
+              cell([rule({ color: "dark", weight: 0.75, before: 0, after: 4 }), p(date, "small", { align: "center", after: 0, fixed: true })]),
+            ],
+          ],
+          { width: round(ctx.W * 0.7) }
+        ),
+      ];
+      return [
+        grid(
+          [ctx.W],
+          [
+            {
+              height: ctx.H - 10,
+              cells: [
+                cell([grid([ctx.W - 16], [{ height: ctx.H - 26, cells: [cell(inner, { pad: 30, valign: "middle", border: { all: { color: "accent", weight: 1 } } })] }], { abs: true })], {
+                  pad: 7,
+                  border: { all: { color: "primary", weight: 4 } },
+                }),
+              ],
+            },
+          ],
+          { abs: true }
+        ),
+      ];
+
+}
+
+const CORE_TEMPLATES = [
   {
     id: "trifold",
     name: "Tri-fold brochure",
@@ -79,6 +86,8 @@ export const TEMPLATES = [
     description: "Six panels on one sheet, printed on both sides and folded in thirds.",
     sizeLabel: "Landscape, 2 sides, folds in thirds",
     fold: "trifold",
+    print: { duplex: "short", paper: "24 to 32 lb (90 to 120 g/m\u00B2) paper folds cleanly. Use card stock for a sturdier piece.", finishing: "Fold the right panel in first, then fold the left panel over it." },
+    customize: { paper: ["letter", "legal", "a4"] },
     page: { size: "paper", orientation: "landscape", margins: 27 },
     folds: panelFolds(3),
     build(ctx) {
@@ -186,6 +195,8 @@ export const TEMPLATES = [
     description: "A four page booklet from one sheet, folded in half.",
     sizeLabel: "Landscape, 2 sides, folds in half",
     fold: "halffold",
+    print: { duplex: "short", paper: "24 to 32 lb (90 to 120 g/m\u00B2) paper folds cleanly. Use card stock for a sturdier piece.", finishing: "Fold in half with side 2 inside." },
+    customize: { paper: ["letter", "legal", "tabloid", "a4", "a3"] },
     page: { size: "paper", orientation: "landscape", margins: 27 },
     folds: panelFolds(2),
     build(ctx) {
@@ -277,6 +288,9 @@ export const TEMPLATES = [
     description: "A two page newsletter with a masthead, lead story, sidebar, and contact strip.",
     sizeLabel: "Portrait, 2 pages",
     fold: "none",
+    print: { duplex: "long", paper: "Plain copy paper works well. Use 24 lb (90 g/m\u00B2) for a heavier feel." },
+    customize: { paper: ["letter", "legal", "a4"] },
+    footer: { text: "{org} News  |  Page {page} of {pages}", align: "center" },
     page: { size: "paper", orientation: "portrait", margins: 36 },
     build(ctx) {
       const now = new Date();
@@ -325,28 +339,23 @@ export const TEMPLATES = [
           { gap: 18 }
         ),
         pageBreak(),
-        grid(
-          [1, 1],
+        // Text flows from the first column into the second, like linked text boxes.
+        columns(
+          2,
           [
-            [
-              cell([
-                p("Member spotlight", "kicker"),
-                p("Meet someone who makes it happen", "h1"),
-                pic("full", 130, { after: 8 }),
-                p("Profile a member, volunteer, or client. Ask three questions and share the best answers in their own words."),
-                p("A short profile builds community and gives readers a reason to open the next issue."),
-              ]),
-              cell([
-                p("From the director", "kicker"),
-                p("A note on the season ahead", "h1"),
-                p("Use this column for a personal message. Thank people, name what is changing, and say what you hope to accomplish together."),
-                p("Keep it warm and specific. Mention one achievement and one challenge, and invite readers to help with the challenge."),
-                p("Your name", "h2", { before: 6, after: 0 }),
-                p("Your title", "caption"),
-              ]),
-            ],
+            p("Member spotlight", "kicker"),
+            p("Meet someone who makes it happen", "h1"),
+            pic("full", 130, { after: 8 }),
+            p("Profile a member, volunteer, or client. Ask three questions and share the best answers in their own words."),
+            p("A short profile builds community and gives readers a reason to open the next issue."),
+            p("From the director", "kicker", { before: 8 }),
+            p("A note on the season ahead", "h1"),
+            p("Use this column for a personal message. Thank people, name what is changing, and say what you hope to accomplish together."),
+            p("Keep it warm and specific. Mention one achievement and one challenge, and invite readers to help with the challenge."),
+            p("Your name", "h2", { before: 6, after: 0 }),
+            p("Your title", "caption"),
           ],
-          { gap: 18 }
+          { gap: 18, rule: true }
         ),
         space(14),
         grid(
@@ -371,6 +380,7 @@ export const TEMPLATES = [
     description: "A bold one page flyer with a picture, event details, and a call to action.",
     sizeLabel: "Portrait, 1 page",
     fold: "none",
+    customize: { paper: FLAT_SIZES },
     page: { size: "paper", orientation: "portrait", margins: 36 },
     build(ctx) {
       return [
@@ -400,6 +410,7 @@ export const TEMPLATES = [
     description: "An announcement with offers and a cut-out coupon.",
     sizeLabel: "Portrait, 1 page",
     fold: "none",
+    customize: { paper: FLAT_SIZES },
     page: { size: "paper", orientation: "portrait", margins: 36 },
     build(ctx) {
       return [
@@ -460,6 +471,8 @@ export const TEMPLATES = [
     description: "A large format poster for walls and windows.",
     sizeLabel: "Tabloid or A3, portrait",
     fold: "none",
+    print: { paper: "For posters larger than your printer, save as PDF and send it to a print shop." },
+    customize: { paper: ["tabloid", "a3", "letter", "legal", "a4"] },
     page: (paper) => ({ size: paper === "a4" ? "a3" : "tabloid", orientation: "portrait", margins: 48 }),
     build(ctx) {
       return [
@@ -485,6 +498,7 @@ export const TEMPLATES = [
     description: "A clear landscape sign for doors, desks, and events.",
     sizeLabel: "Landscape, 1 page",
     fold: "none",
+    customize: { paper: FLAT_SIZES, orientation: true },
     page: { size: "paper", orientation: "landscape", margins: 40 },
     build(ctx) {
       return [
@@ -506,6 +520,8 @@ export const TEMPLATES = [
     description: "Ten 3.5 x 2 inch cards per sheet, filled from your business information.",
     sizeLabel: "10 per sheet, with cut guides",
     fold: "cards",
+    print: { paper: "Card stock, 80 to 110 lb cover (216 to 300 g/m\u00B2).", finishing: "Cut on the dashed guides with a paper trimmer." },
+    customize: { paper: false, margins: false },
     page: (paper) => ({ size: "paper", orientation: "portrait", margins: sheetMargins(paper, 252, 144, 2, 5) }),
     folds: () => ({ vertical: [], horizontal: [], cut: true }),
     build(ctx) {
@@ -533,6 +549,8 @@ export const TEMPLATES = [
     description: "Two 6 x 4 inch postcards per sheet, with fronts on side 1 and mailing backs on side 2.",
     sizeLabel: "2 per sheet, 2 sides",
     fold: "cards",
+    print: { duplex: "long", paper: "Card stock, 80 to 110 lb cover (216 to 300 g/m\u00B2).", finishing: "Cut on the dashed guides." },
+    customize: { paper: false, margins: false },
     page: (paper) => ({ size: "paper", orientation: "portrait", margins: sheetMargins(paper, 432, 288, 1, 2) }),
     folds: () => ({ vertical: [], horizontal: [], cut: true }),
     build(ctx) {
@@ -595,6 +613,8 @@ export const TEMPLATES = [
     description: "A folded card: front and back on side 1, the message inside on side 2.",
     sizeLabel: "Landscape, 2 sides, folds in half",
     fold: "halffold",
+    print: { duplex: "short", paper: "Card stock, 80 to 110 lb cover (216 to 300 g/m\u00B2).", finishing: "Fold in half with side 2 inside." },
+    customize: { paper: ["letter", "a4"] },
     page: { size: "paper", orientation: "landscape", margins: 27 },
     folds: panelFolds(2),
     build(ctx) {
@@ -655,6 +675,8 @@ export const TEMPLATES = [
     description: "A framed invitation on a 5 x 7 inch card (A5 for A4 paper).",
     sizeLabel: "5 x 7 in or A5",
     fold: "none",
+    print: { paper: "Card stock, 80 to 110 lb cover (216 to 300 g/m\u00B2)." },
+    customize: { paper: ["card5x7", "a5", "halfLetter", "letter", "a4"] },
     page: (paper) => ({ size: paper === "a4" ? "a5" : "card5x7", orientation: "portrait", margins: 22 }),
     build(ctx) {
       return [
@@ -695,6 +717,8 @@ export const TEMPLATES = [
     description: "A folded program with a cover, welcome, schedule, and thanks.",
     sizeLabel: "Landscape, 2 sides, folds in half",
     fold: "halffold",
+    print: { duplex: "short", paper: "24 to 32 lb (90 to 120 g/m\u00B2) paper folds cleanly. Use card stock for a sturdier piece.", finishing: "Fold in half with side 2 inside." },
+    customize: { paper: ["letter", "legal", "tabloid", "a4", "a3"] },
     page: { size: "paper", orientation: "landscape", margins: 27 },
     folds: panelFolds(2),
     build(ctx) {
@@ -792,6 +816,8 @@ export const TEMPLATES = [
     description: "A one page menu with sections, descriptions, and prices.",
     sizeLabel: "Portrait, 1 page",
     fold: "none",
+    print: { paper: "Heavy matte paper or card stock holds up best at the table." },
+    customize: { paper: FLAT_SIZES },
     page: { size: "paper", orientation: "portrait", margins: 42 },
     build(ctx) {
       const item = (name, desc, price) => [
@@ -835,6 +861,8 @@ export const TEMPLATES = [
     description: "Branded letter paper with your logo, address, and a sample letter.",
     sizeLabel: "Portrait, 1 page",
     fold: "none",
+    print: { paper: "24 lb (90 g/m\u00B2) bond paper gives letters a professional feel." },
+    customize: { paper: ["letter", "legal", "a4"] },
     page: { size: "paper", orientation: "portrait", margins: { top: 40, right: 54, bottom: 40, left: 54 } },
     build(ctx) {
       return [
@@ -864,25 +892,62 @@ export const TEMPLATES = [
   {
     id: "labels",
     name: "Address labels",
-    category: "stationery",
-    description: "Return address labels: 30 per Letter sheet (2.625 x 1 in) or 21 per A4 sheet (63.5 x 38.1 mm).",
+    category: "labels",
+    description: "Return address labels, or one label per person from a pasted list: 30 per Letter sheet (2.625 x 1 in) or 21 per A4 sheet (63.5 x 38.1 mm).",
     sizeLabel: "30 per sheet (Letter), 21 per sheet (A4)",
     fold: "cards",
+    print: { paper: "Label sheets with the same layout: 30 labels of 2.625 x 1 in (Letter) or 21 labels of 63.5 x 38.1 mm (A4).", finishing: "Print a test on plain paper first and hold it over a label sheet to check alignment." },
+    customize: { paper: false, margins: false },
     page: (paper) =>
       paper === "a4"
         ? { size: "paper", orientation: "portrait", margins: { top: round(mm(15.15)), bottom: round(mm(15.15)), left: round(mm(7.21)), right: round(mm(7.21)) } }
         : { size: "paper", orientation: "portrait", margins: { top: 36, bottom: 36, left: 13.5, right: 13.5 } },
     folds: () => ({ vertical: [], horizontal: [], cut: true }),
+    merge: {
+      fields: [
+        { key: "name", label: "Name", aliases: ["full name", "recipient", "addressee"] },
+        { key: "company", label: "Company", aliases: ["organization", "organisation"] },
+        { key: "address", label: "Street address", aliases: ["address 1", "address line 1", "street"] },
+        { key: "address2", label: "Address line 2", aliases: ["apt", "suite", "unit", "address 2"] },
+        { key: "city", label: "City", aliases: ["town", "city state zip"] },
+        { key: "state", label: "State or region", aliases: ["province", "region", "county"] },
+        { key: "postal", label: "Postal code", aliases: ["zip", "zip code", "postcode"] },
+        { key: "country", label: "Country" },
+      ],
+      sample: [],
+      note: "Paste a list to print one label per person. Leave it empty to print your own return address on every label.",
+    },
     build(ctx) {
       const a4 = ctx.paper === "a4";
       const w = a4 ? round(mm(63.5)) : 189;
       const h = a4 ? round(mm(38.1)) : 72;
       const gap = a4 ? round(mm(2.54)) : 9;
       const down = a4 ? 7 : 10;
-      const label = () =>
+      const perSheet = down * 3;
+      const returnLabel = () =>
         cell([p("{org}", "small", { bold: true, color: "primary", after: 1 }), p("{address}\n{city}", "small", { after: 0, line: 1.2 })], { pad: [4, 10, 4, 12], valign: "middle" });
-      const rows = Array.from({ length: down }, () => ({ height: h, exact: true, cells: [label(), label(), label()] }));
-      return [grid([w, w, w], rows, { abs: true, gap, align: "center" })];
+      const mailLabel = (r) => {
+        const place = [r.city, [r.state, r.postal].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+        const lines = [r.company, r.address, r.address2, place, r.country].filter(Boolean);
+        return cell(
+          [p(r.name || "", "small", { bold: true, color: "dark", after: 1, fixed: true }), lines.length ? p(lines.join("\n"), "small", { after: 0, line: 1.15, fixed: true }) : null],
+          { pad: [4, 10, 4, 12], valign: "middle" }
+        );
+      };
+      const sheet = (cells) => {
+        const rows = [];
+        for (let i = 0; i < down; i++) rows.push({ height: h, exact: true, cells: cells.slice(i * 3, i * 3 + 3) });
+        return grid([w, w, w], rows, { abs: true, gap, align: "center" });
+      };
+      if (!ctx.hasRecords) return [sheet(Array.from({ length: perSheet }, returnLabel))];
+      const out = [];
+      chunk(ctx.records, perSheet).forEach((group, i) => {
+        if (i) out.push(pageBreak());
+        const cells = group.map(mailLabel);
+        while (cells.length < perSheet) cells.push(cell([], { pad: 0 }));
+        out.push(sheet(cells));
+      });
+      return out;
     },
   },
 
@@ -893,17 +958,30 @@ export const TEMPLATES = [
     description: "A month at a glance, generated for any month and year.",
     sizeLabel: "Landscape, 1 page",
     fold: "none",
+    customize: { paper: FLAT_SIZES, orientation: true },
     page: { size: "paper", orientation: "landscape", margins: 30 },
     options: [
       { key: "month", label: "Month", type: "month", default: () => new Date().getMonth() + 1 },
       { key: "year", label: "Year", type: "number", default: () => new Date().getFullYear() },
+      {
+        key: "weekStart",
+        label: "Weeks start on",
+        type: "select",
+        choices: [
+          { value: "sunday", label: "Sunday" },
+          { value: "monday", label: "Monday" },
+        ],
+        default: "sunday",
+      },
     ],
     build(ctx) {
       const month = Math.min(12, Math.max(1, Number(ctx.opt.month) || 1));
       const year = Number(ctx.opt.year) || new Date().getFullYear();
       ctx.setVar("calMonth", MONTHS[month - 1]);
       ctx.setVar("calYear", year);
-      const first = new Date(year, month - 1, 1).getDay();
+      const startDay = ctx.opt.weekStart === "monday" ? 1 : 0;
+      const first = (new Date(year, month - 1, 1).getDay() - startDay + 7) % 7;
+      const dayNames = WEEKDAYS.slice(startDay).concat(WEEKDAYS.slice(0, startDay));
       const days = new Date(year, month, 0).getDate();
       const weeks = Math.ceil((first + days) / 7);
       const headerH = 62;
@@ -911,14 +989,15 @@ export const TEMPLATES = [
       const rowH = round((ctx.H - headerH - dayRowH - 16) / weeks);
       const border = { all: { color: "line", weight: 0.5 } };
       const rows = [
-        { cells: WEEKDAYS.map((d) => cell([p(d, "label", { color: "onPrimary", align: "center", after: 0, fixed: true })], { fill: "primary", pad: 5 })) },
+        { cells: dayNames.map((d) => cell([p(d, "label", { color: "onPrimary", align: "center", after: 0, fixed: true })], { fill: "primary", pad: 5 })) },
       ];
       let n = 1 - first;
       for (let wk = 0; wk < weeks; wk++) {
         const cells = [];
         for (let d = 0; d < 7; d++, n++) {
           const inMonth = n >= 1 && n <= days;
-          cells.push(cell(inMonth ? [p(String(n), "h2", { color: d === 0 ? "accent" : "dark", after: 0, size: 11, fixed: true })] : [], { pad: [4, 6, 4, 6], border, fill: inMonth ? null : "tint" }));
+          const sunday = dayNames[d] === "Sunday";
+          cells.push(cell(inMonth ? [p(String(n), "h2", { color: sunday ? "accent" : "dark", after: 0, size: 11, fixed: true })] : [], { pad: [4, 6, 4, 6], border, fill: inMonth ? null : "tint" }));
         }
         rows.push({ height: rowH, cells });
       }
@@ -947,54 +1026,37 @@ export const TEMPLATES = [
     description: "A framed certificate of achievement with signature lines.",
     sizeLabel: "Landscape, 1 page",
     fold: "none",
+    print: { paper: "Card stock, 80 to 110 lb cover (216 to 300 g/m\u00B2). Parchment or bright white stock looks best." },
+    customize: { paper: ["letter", "legal", "a4"] },
     page: { size: "paper", orientation: "landscape", margins: 30 },
+    merge: {
+      fields: [
+        { key: "recipient", label: "Recipient name", aliases: ["name", "full name", "student", "employee"] },
+        { key: "reason", label: "Reason or achievement", aliases: ["achievement", "for", "award", "description"] },
+        { key: "date", label: "Date", aliases: ["awarded", "date awarded"] },
+      ],
+      sample: [],
+      note: "Paste a list of names to print one certificate per person. Reason and date are optional.",
+    },
     build(ctx) {
-      const inner = [
-        p("{org}", "kicker", { align: "center", after: 14 }),
-        p("Certificate of Achievement", "title", { align: "center", size: 34 }),
-        rule({ color: "accent", weight: 1.5, width: 80, align: "center", before: 4, after: 16 }),
-        p("This certificate is proudly presented to", "body", { align: "center", italic: true, color: "muted", after: 10 }),
-        p("Recipient Name", "display", { align: "center", size: 40, color: "accent", italic: true, after: 12 }),
-        p("in recognition of outstanding dedication, leadership, and service during the past year.", "body", { align: "center", size: 12, after: 30 }),
-        grid(
-          [1, 0.3, 1],
-          [
-            [
-              cell([rule({ color: "dark", weight: 0.75, before: 0, after: 4 }), p("{name}, {title}", "small", { align: "center", after: 0 })]),
-              cell([]),
-              cell([rule({ color: "dark", weight: 0.75, before: 0, after: 4 }), p("Date", "small", { align: "center", after: 0, fixed: true })]),
-            ],
-          ],
-          { width: round(ctx.W * 0.7) }
-        ),
-      ];
-      return [
-        grid(
-          [ctx.W],
-          [
-            {
-              height: ctx.H - 10,
-              cells: [
-                cell([grid([ctx.W - 16], [{ height: ctx.H - 26, cells: [cell(inner, { pad: 30, valign: "middle", border: { all: { color: "accent", weight: 1 } } })] }], { abs: true })], {
-                  pad: 7,
-                  border: { all: { color: "primary", weight: 4 } },
-                }),
-              ],
-            },
-          ],
-          { abs: true }
-        ),
-      ];
+      const people = ctx.hasRecords ? ctx.records : [null];
+      const out = [];
+      people.forEach((r, i) => {
+        if (i) out.push(pageBreak());
+        out.push(...certificatePage(ctx, r));
+      });
+      return out;
     },
   },
 
   {
     id: "resume",
-    name: "Resume",
-    category: "stationery",
-    description: "A clean one page resume with a sidebar for skills and contact details.",
+    name: "Designed resume",
+    category: "resumes",
+    description: "A designed one page resume with a shaded sidebar, for printing and handing out. For online applications, use a plain resume: screening software reads it more reliably.",
     sizeLabel: "Portrait, 1 page",
     fold: "none",
+    customize: { paper: ["letter", "a4"] },
     page: { size: "paper", orientation: "portrait", margins: 36 },
     build(ctx) {
       const job = (role, place, dates, text) => [p(role, "h2", { after: 0 }), p(`${place}  |  ${dates}`, "caption", { after: 3 }), p(text, "small", { after: 9 })];
@@ -1040,6 +1102,8 @@ export const TEMPLATES = [
     },
   },
 ];
+
+export const TEMPLATES = [...CORE_TEMPLATES, ...RESUME_TEMPLATES, ...MORE_TEMPLATES];
 
 export function findTemplate(id) {
   return TEMPLATES.find((t) => t.id === id) || null;
@@ -1153,7 +1217,7 @@ export function findPart(id) {
 }
 
 /** Plain words for the fold types, used by the print and fold guide. */
-export const FOLD_GUIDES = {
+const BASE_FOLD_GUIDES = {
   trifold: {
     title: "Folding a tri-fold brochure",
     steps: [
@@ -1188,3 +1252,5 @@ export const FOLD_GUIDES = {
     tip: "Most home printers cannot print to the very edge of the paper. Offizin keeps important content inside a safe margin.",
   },
 };
+
+export const FOLD_GUIDES = { ...BASE_FOLD_GUIDES, ...MORE_FOLD_GUIDES };
