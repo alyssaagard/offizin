@@ -18,6 +18,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const ONLY = (process.argv.find((a) => a.startsWith("--only=")) || "").slice(7) || null;
 const load = (p) => import(pathToFileURL(path.join(ROOT, p)).href);
 let failures = 0;
 const fail = (msg) => {
@@ -31,6 +32,29 @@ const { compose, composePart, walkBlocks } = await load("docs/app/core/compose.j
 const { docxBytes, documentXml } = await load("docs/app/render/ooxml.js");
 
 const STUB_PNG = { mime: "image/png", base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" };
+
+/** Each file in scripts/tests/ exports run({ ROOT, fail, ok, load, STUB_PNG }). */
+async function runAreaTests() {
+  const testDir = path.join(ROOT, "scripts/tests");
+  const files = fs.existsSync(testDir) ? fs.readdirSync(testDir).filter((f) => f.endsWith(".mjs")).sort() : [];
+  for (const f of files) {
+    if (ONLY && !f.startsWith(ONLY)) continue;
+    console.log("Tests: " + f.replace(/\.mjs$/, ""));
+    try {
+      const mod = await import(pathToFileURL(path.join(testDir, f)).href);
+      await mod.run({ ROOT, fail, ok, load, STUB_PNG });
+    } catch (e) {
+      fail(`${f}: ${(e && e.stack) || e}`);
+    }
+  }
+}
+
+// npm run check -- --only=word   runs just scripts/tests/word.mjs
+if (ONLY) {
+  await runAreaTests();
+  console.log(failures ? `\n${failures} problem${failures > 1 ? "s" : ""} found.` : "\nAll checks passed.");
+  process.exit(failures ? 1 : 0);
+}
 
 // 1. House style ------------------------------------------------------------
 console.log("House style");
@@ -157,6 +181,9 @@ for (const t of TEMPLATES) {
   checkBody(body, "parts");
 }
 ok(`Code.gs built ${TEMPLATES.length} templates and ${PARTS.length} parts`);
+
+// 6. Area tests ----------------------------------------------------------------
+await runAreaTests();
 
 console.log(failures ? `\n${failures} problem${failures > 1 ? "s" : ""} found.` : "\nAll checks passed.");
 process.exit(failures ? 1 : 0);

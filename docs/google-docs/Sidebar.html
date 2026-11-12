@@ -421,7 +421,75 @@ function findColorScheme(id) {
   return COLOR_SCHEMES.find((s) => s.id === id) || COLOR_SCHEMES[0];
 }
 
-function findFontScheme(id) {
+/**
+ * Fonts people can pick for their own font scheme. Word fonts come with Microsoft 365
+ * (installed on Windows and Mac, and available as cloud fonts in Word on the web).
+ * Google fonts are Google Fonts families that Google Docs offers by name.
+ * `css` is the preview fallback stack.
+ */
+const WORD_FONT_CHOICES = [
+  { name: "Aptos", css: "Aptos, 'Segoe UI', sans-serif" },
+  { name: "Aptos Display", css: "'Aptos Display', Aptos, 'Segoe UI', sans-serif" },
+  { name: "Arial", css: "Arial, Helvetica, sans-serif" },
+  { name: "Bookman Old Style", css: "'Bookman Old Style', Georgia, serif" },
+  { name: "Calibri", css: "Calibri, Carlito, sans-serif" },
+  { name: "Cambria", css: "Cambria, Caladea, serif" },
+  { name: "Century Gothic", css: "'Century Gothic', Montserrat, sans-serif" },
+  { name: "Constantia", css: "Constantia, Georgia, serif" },
+  { name: "Corbel", css: "Corbel, 'Segoe UI', sans-serif" },
+  { name: "Franklin Gothic Medium", css: "'Franklin Gothic Medium', 'Arial Narrow', sans-serif" },
+  { name: "Garamond", css: "Garamond, 'EB Garamond', serif" },
+  { name: "Georgia", css: "Georgia, serif" },
+  { name: "Gill Sans MT", css: "'Gill Sans MT', 'Gill Sans', sans-serif" },
+  { name: "Palatino Linotype", css: "'Palatino Linotype', Palatino, serif" },
+  { name: "Rockwell", css: "Rockwell, 'Roboto Slab', serif" },
+  { name: "Segoe UI", css: "'Segoe UI', system-ui, sans-serif" },
+  { name: "Times New Roman", css: "'Times New Roman', Times, serif" },
+  { name: "Trebuchet MS", css: "'Trebuchet MS', sans-serif" },
+  { name: "Verdana", css: "Verdana, sans-serif" },
+];
+
+const GOOGLE_FONT_CHOICES = [
+  { name: "Arial", css: "Arial, Helvetica, sans-serif" },
+  { name: "Cormorant Garamond", css: "'Cormorant Garamond', Garamond, serif" },
+  { name: "EB Garamond", css: "'EB Garamond', Garamond, serif" },
+  { name: "Georgia", css: "Georgia, serif" },
+  { name: "Inter", css: "Inter, sans-serif" },
+  { name: "Lato", css: "Lato, sans-serif" },
+  { name: "Libre Baskerville", css: "'Libre Baskerville', serif" },
+  { name: "Lora", css: "Lora, serif" },
+  { name: "Merriweather", css: "Merriweather, serif" },
+  { name: "Montserrat", css: "Montserrat, sans-serif" },
+  { name: "Nunito", css: "Nunito, sans-serif" },
+  { name: "Open Sans", css: "'Open Sans', sans-serif" },
+  { name: "Oswald", css: "Oswald, sans-serif" },
+  { name: "Playfair Display", css: "'Playfair Display', serif" },
+  { name: "Raleway", css: "Raleway, sans-serif" },
+  { name: "Roboto", css: "Roboto, sans-serif" },
+  { name: "Roboto Slab", css: "'Roboto Slab', serif" },
+  { name: "Source Sans 3", css: "'Source Sans 3', sans-serif" },
+  { name: "Times New Roman", css: "'Times New Roman', Times, serif" },
+  { name: "Verdana", css: "Verdana, sans-serif" },
+];
+
+const cssFor = (list, name, generic) => (list.find((f) => f.name === name) || { css: `'${name}', ${generic}` }).css;
+
+/**
+ * A font scheme by ID. "custom" builds one from the user's own picks:
+ * customFonts = { heading: { word, google }, body: { word, google }, headingBold }.
+ */
+function findFontScheme(id, customFonts) {
+  if (id === "custom" && customFonts && customFonts.heading && customFonts.body) {
+    const h = customFonts.heading;
+    const b = customFonts.body;
+    return {
+      id: "custom",
+      name: "Your fonts",
+      headingBold: customFonts.headingBold !== false,
+      heading: { word: h.word || "Georgia", google: h.google || "Georgia", css: cssFor(WORD_FONT_CHOICES, h.word || "Georgia", "serif") },
+      body: { word: b.word || "Arial", google: b.google || "Arial", css: cssFor(WORD_FONT_CHOICES, b.word || "Arial", "sans-serif") },
+    };
+  }
   return FONT_SCHEMES.find((s) => s.id === id) || FONT_SCHEMES[0];
 }
 
@@ -458,7 +526,7 @@ function fontsFor(scheme, platform) {
   return { heading: pick(scheme.heading), body: pick(scheme.body), headingBold: scheme.headingBold };
 }
 
-return { COLOR_SCHEMES, FONT_SCHEMES, GOOGLE_FONT_FAMILIES, googleFontsHref, findColorScheme, findFontScheme, palette, fontsFor };
+return { COLOR_SCHEMES, FONT_SCHEMES, GOOGLE_FONT_FAMILIES, googleFontsHref, findColorScheme, WORD_FONT_CHOICES, GOOGLE_FONT_CHOICES, findFontScheme, palette, fontsFor };
 })();
 
 // docs/app/core/compose.js
@@ -471,13 +539,21 @@ const __oz_core_compose_js = (() => {
  * values: font names, point sizes, hex colors, and column widths. Each renderer (the web
  * preview, Word, and Google Docs) then draws the same model, so the three always match.
  *
- * Resolved block types: p, rule, spacer, break, image, grid. Lists, bands, and data tables
- * in templates are converted into those.
+ * Resolved block types: p, rule, spacer, break, image, grid, columns.
+ * Lists, bands, data tables, and merge scopes in templates are converted into those.
+ *
+ * Model additions in version 2:
+ *   model.styles    the default look of each role, for native styles (Title, Heading 1, Normal)
+ *   model.print     print settings: duplex, book fold, mirror margins, gutter, and more
+ *   model.footer    optional footer text; {page} and {pages} are left for the renderer
+ *   model.pages     booklets only: each page's blocks in reading order
+ *   model.booklet   booklets only: page count, sheet size, and printer spread order
+ *   model.options   the options the publication was composed with
  */
-const { pageSize, round, mix } = __oz_core_util_js;
+const { pageSize, round, mix, clamp } = __oz_core_util_js;
 const { palette, fontsFor, findColorScheme, findFontScheme } = __oz_core_schemes_js;
 
-const MODEL_VERSION = 1;
+const MODEL_VERSION = 2;
 
 /** Typography roles. Sizes are in points; line is a multiple of single spacing. */
 const ROLES = {
@@ -496,6 +572,27 @@ const ROLES = {
   button: { font: "body", size: 11, bold: true, caps: true, line: 1.2, after: 0, color: "onAccent" },
 };
 
+/**
+ * Native styles for each role. Word uses the style ID (built-in IDs for Title, Heading 1,
+ * Heading 2, Normal, Quote, and Caption, so the Styles pane, Navigation pane, and screen
+ * readers understand the document). Google Docs uses the named paragraph style.
+ */
+const ROLE_STYLES = {
+  display: { word: "OffizinDisplay", name: "Offizin Display", google: "TITLE" },
+  title: { word: "Title", name: "Title", google: "TITLE" },
+  headline: { word: "Heading1", name: "heading 1", google: "HEADING1" },
+  h1: { word: "Heading1", name: "heading 1", google: "HEADING1" },
+  h2: { word: "Heading2", name: "heading 2", google: "HEADING2" },
+  kicker: { word: "OffizinKicker", name: "Offizin Kicker", google: "NORMAL" },
+  lead: { word: "OffizinLead", name: "Offizin Lead", google: "SUBTITLE" },
+  body: { word: "Normal", name: "Normal", google: "NORMAL" },
+  small: { word: "OffizinSmall", name: "Offizin Small", google: "NORMAL" },
+  caption: { word: "Caption", name: "caption", google: "NORMAL" },
+  quote: { word: "Quote", name: "Quote", google: "NORMAL" },
+  label: { word: "OffizinLabel", name: "Offizin Label", google: "NORMAL" },
+  button: { word: "OffizinButton", name: "Offizin Button", google: "NORMAL" },
+};
+
 /** Business information, in the spirit of Publisher's business information sets. */
 const BUSINESS_FIELDS = [
   { key: "name", label: "Your name", sample: "Jordan Rivera" },
@@ -508,16 +605,60 @@ const BUSINESS_FIELDS = [
   { key: "email", label: "Email", sample: "hello@example.org" },
   { key: "web", label: "Website", sample: "www.example.org" },
   { key: "social", label: "Social media", sample: "@riversidearts" },
+  { key: "profile", label: "LinkedIn or portfolio link", sample: "linkedin.com/in/jordanrivera" },
 ];
+
+/**
+ * Spacing and text controls. Each is a multiplier (1 = the template's design).
+ *   textScale   font sizes          lineScale   line spacing
+ *   spaceScale  space between paragraphs and blocks
+ *   padScale    padding inside panels, boxes, and cells
+ *   gapScale    gaps between columns
+ */
+const DEFAULT_LAYOUT = { textScale: 1, lineScale: 1, spaceScale: 1, padScale: 1, gapScale: 1 };
+const LAYOUT_LIMITS = {
+  textScale: [0.7, 1.5],
+  lineScale: [0.8, 1.8],
+  spaceScale: [0, 3],
+  padScale: [0, 3],
+  gapScale: [0, 3],
+};
+
+/** Print settings carried by every model. Renderers apply what their editor supports. */
+const DEFAULT_PRINT = {
+  duplex: "none", // "none", "long" (flip on long edge), or "short" (flip on short edge)
+  scale: 100, // always print at actual size
+  bookFold: false, // Word prints the pages as a folded booklet (imposition done by Word)
+  mirrorMargins: false, // inside and outside margins for facing pages
+  gutter: 0, // extra binding margin in points
+  twoPerSheet: false, // Word prints two pages on each sheet
+  embedFonts: false, // Word for Windows embeds fonts when the file is saved
+  paper: "", // a plain-language paper suggestion
+  finishing: "", // cutting, folding, or binding notes
+};
 
 const DEFAULT_THEME = {
   colorScheme: "harbor",
   customColors: null, // { primary, accent, dark } when the user picks their own
   fontScheme: "editorial",
+  customFonts: null, // { heading: { word, google }, body: { word, google }, headingBold } with fontScheme "custom"
   paper: "letter", // "letter" or "a4"
   business: {},
   logo: null, // { src: dataURL, width, height } in pixels
+  layout: DEFAULT_LAYOUT,
 };
+
+/** What the Customize panel may change for a template. */
+function customizeFor(template) {
+  const c = template.customize || {};
+  return {
+    paper: c.paper === false ? null : c.paper || null, // a list of PAPER keys, or null for Letter/A4 only
+    orientation: !!c.orientation,
+    margins: c.margins !== false,
+    spacing: c.spacing !== false,
+    text: c.text !== false,
+  };
+}
 
 /** The three chosen colors for a theme, from a named scheme or custom colors. */
 function themeColors(theme) {
@@ -539,20 +680,67 @@ function businessValues(business = {}) {
 
 function normMargins(m) {
   if (typeof m === "number") return { top: m, right: m, bottom: m, left: m };
-  return { top: m.top, right: m.right, bottom: m.bottom, left: m.left };
+  return { top: Number(m.top) || 0, right: Number(m.right) || 0, bottom: Number(m.bottom) || 0, left: Number(m.left) || 0 };
 }
 
-/** Resolves a template's page description for the chosen paper. */
-function resolvePage(template, paper) {
-  const spec = typeof template.page === "function" ? template.page(paper) : template.page;
-  const size = spec.width ? { width: spec.width, height: spec.height } : pageSize(spec.size === "paper" || !spec.size ? paper : spec.size, spec.orientation);
-  const margins = normMargins(spec.margins ?? 36);
+function clampLayout(layout = {}) {
+  const out = {};
+  for (const [k, [lo, hi]] of Object.entries(LAYOUT_LIMITS)) {
+    const v = Number(layout[k]);
+    out[k] = Number.isFinite(v) ? clamp(v, lo, hi) : DEFAULT_LAYOUT[k];
+  }
+  return out;
+}
+
+/** Resolves a template's page for the chosen paper and any Customize overrides. */
+function resolvePage(template, paper, options = {}) {
+  const spec = typeof template.page === "function" ? template.page(paper, options) : template.page;
+  const allow = customizeFor(template);
+  let sizeName = spec.size === "paper" || !spec.size ? paper : spec.size;
+  if (options.paperSize && allow.paper && allow.paper.includes(options.paperSize)) sizeName = options.paperSize;
+  let orientation = spec.orientation || "portrait";
+  if (allow.orientation && (options.orientation === "portrait" || options.orientation === "landscape")) orientation = options.orientation;
+  const size = spec.width ? { width: spec.width, height: spec.height } : pageSize(sizeName, orientation);
+  let margins = normMargins(spec.margins ?? 36);
+  if (options.margins && allow.margins) {
+    const m = normMargins(options.margins);
+    // Keep at least two inches of usable space in each direction.
+    const maxSide = Math.max(0, (size.width - 144) / 2);
+    const maxTop = Math.max(0, (size.height - 144) / 2);
+    margins = {
+      top: round(clamp(m.top, 0, maxTop)),
+      bottom: round(clamp(m.bottom, 0, maxTop)),
+      left: round(clamp(m.left, 0, maxSide)),
+      right: round(clamp(m.right, 0, maxSide)),
+    };
+  }
   return {
     width: round(size.width),
     height: round(size.height),
     orientation: size.width > size.height ? "landscape" : "portrait",
     margins,
+    sizeName: spec.width ? null : sizeName,
   };
+}
+
+/** Cleans merge records: plain string values, at most 1000 records. */
+function normalizeRecords(records) {
+  if (!Array.isArray(records)) return [];
+  return records.slice(0, 1000).map((r) => {
+    const out = {};
+    for (const [k, v] of Object.entries(r || {})) out[String(k)] = v == null ? "" : String(v).trim();
+    return out;
+  });
+}
+
+/** Printer spread order for a booklet of n pages (n is a multiple of 4), as [left, right] page indexes. */
+function bookletSpreads(n) {
+  const spreads = [];
+  for (let s = 0; s < n / 4; s++) {
+    spreads.push([n - 1 - 2 * s, 2 * s]); // front of sheet s
+    spreads.push([2 * s + 1, n - 2 - 2 * s]); // back of sheet s
+  }
+  return spreads;
 }
 
 // ---------------------------------------------------------------------------
@@ -560,11 +748,12 @@ function resolvePage(template, paper) {
 // ---------------------------------------------------------------------------
 
 class Composer {
-  constructor(theme, platform) {
+  constructor(theme, platform, layout) {
     this.theme = { ...DEFAULT_THEME, ...theme };
     this.platform = platform;
+    this.layout = clampLayout(layout || this.theme.layout);
     this.colors = palette(themeColors(this.theme));
-    this.fontScheme = findFontScheme(this.theme.fontScheme);
+    this.fontScheme = findFontScheme(this.theme.fontScheme, this.theme.customFonts);
     this.fonts = fontsFor(this.fontScheme, platform);
     const { values, missing } = businessValues(this.theme.business);
     this.info = values;
@@ -582,7 +771,15 @@ class Composer {
     return this.colors[token] || this.colors[fallback];
   }
 
-  /** Replaces {field} tokens with business information or template variables. */
+  size(pt) {
+    return Math.max(4, Math.round(pt * this.layout.textScale * 2) / 2);
+  }
+
+  space(pt) {
+    return round((pt || 0) * this.layout.spaceScale, 1);
+  }
+
+  /** Replaces {field} tokens with merge values, template variables, or business information. */
   fill(text) {
     return String(text).replace(/\{(\w+)\}/g, (m, key) => {
       if (key in this.vars) return String(this.vars[key]);
@@ -614,8 +811,41 @@ class Composer {
     return out.length ? out : [{ text: "" }];
   }
 
+  /** The default look of one role, after the theme and the text controls. */
+  roleStyle(roleName) {
+    const role = ROLES[roleName] || ROLES.body;
+    const font = this.fonts[role.font];
+    const isHeading = role.font === "heading";
+    const caps = !!role.caps;
+    return {
+      role: roleName,
+      word: ROLE_STYLES[roleName].word,
+      wordName: ROLE_STYLES[roleName].name,
+      google: ROLE_STYLES[roleName].google,
+      fontKey: role.font,
+      font: font.name,
+      css: font.css,
+      size: this.size(role.size),
+      color: this.color(role.color),
+      bold: role.bold ? (isHeading ? this.fonts.headingBold : true) : false,
+      italic: !!role.italic,
+      caps,
+      tracking: caps ? 0.08 : 0,
+      line: round(role.line * this.layout.lineScale, 3),
+      before: 0,
+      after: this.space(role.after),
+    };
+  }
+
+  styles() {
+    const out = {};
+    for (const r of Object.keys(ROLES)) out[r] = this.roleStyle(r);
+    return out;
+  }
+
   paragraph(b, extra = {}) {
-    const role = ROLES[b.role || "body"] || ROLES.body;
+    const roleName = ROLES[b.role] ? b.role : "body";
+    const role = ROLES[roleName];
     const fontKey = b.font || role.font;
     const font = this.fonts[fontKey];
     const isHeading = fontKey === "heading";
@@ -625,20 +855,23 @@ class Composer {
     const caps = b.caps ?? role.caps ?? false;
     const p = {
       t: "p",
+      style: roleName,
       runs: this.runs(this.fill(raw), caps),
       font: font.name,
       css: font.css,
-      size: b.size ?? role.size,
+      size: this.size(b.size ?? role.size),
       color: this.color(b.color, role.color),
       bold,
       italic: b.italic ?? role.italic ?? false,
       align: b.align || "left",
-      before: b.before ?? 0,
-      after: b.after ?? role.after,
-      line: b.line ?? role.line,
+      before: this.space(b.before ?? 0),
+      after: this.space(b.after ?? role.after),
+      line: round(Math.max(0.8, (b.line ?? role.line) * this.layout.lineScale), 3),
       tracking: b.tracking ?? (caps ? 0.08 : 0),
       ...extra,
     };
+    if (b.indent) p.indent = { left: Number(b.indent.left) || 0, hanging: Number(b.indent.hanging) || 0 };
+    if (b.keepNext) p.keepNext = true;
     return p;
   }
 
@@ -657,7 +890,7 @@ class Composer {
             const last = i === b.items.length - 1;
             out.push(
               this.paragraph(
-                { ...b, t: "p", text: item, after: last ? (b.after ?? 6) : (b.gap ?? 3) },
+                { ...b, t: "p", text: item, indent: undefined, after: last ? (b.after ?? 6) : (b.gap ?? 3) },
                 { bullet: { char: b.bullet || "•", color: this.color(b.bulletColor || "accent"), indent } }
               )
             );
@@ -669,14 +902,14 @@ class Composer {
             t: "rule",
             color: this.color(b.color || "line"),
             weight: b.weight ?? 1,
-            before: b.before ?? 4,
-            after: b.after ?? 8,
+            before: this.space(b.before ?? 4),
+            after: this.space(b.after ?? 8),
             width: round(b.width ? Math.min(b.width, width) : width),
             align: b.align || "left",
           });
           break;
         case "spacer":
-          out.push({ t: "spacer", height: b.height ?? 12 });
+          out.push({ t: "spacer", height: this.space(b.height ?? 12) });
           break;
         case "break":
           out.push({ t: "break" });
@@ -693,6 +926,16 @@ class Composer {
         case "grid":
           out.push(this.grid(b, width));
           break;
+        case "columns":
+          out.push(this.columns(b, width));
+          break;
+        case "scope": {
+          const saved = this.vars;
+          this.vars = { ...saved, ...b.vars };
+          out.push(...this.blocks(b.blocks || [], width));
+          this.vars = saved;
+          break;
+        }
         default:
           throw new Error("Unknown block type: " + b.t);
       }
@@ -720,8 +963,8 @@ class Composer {
       fill: this.color(b.fill || "tint"),
       ink: this.color(b.ink || "primary"),
       src: logo ? logo.src : null,
-      before: b.before ?? 0,
-      after: b.after ?? 6,
+      before: this.space(b.before ?? 0),
+      after: this.space(b.after ?? 6),
       alt: logo ? "Logo" : "Offizin picture placeholder",
     };
   }
@@ -777,7 +1020,9 @@ class Composer {
 
   grid(b, width) {
     const total = b.width ? Math.min(b.width, width) : width;
-    const gap = b.gap ?? 0;
+    // Sheet layouts (cards, labels) keep exact gaps so they line up with printed stock.
+    const fixedGap = b.fixedGap || b.abs;
+    const gap = (b.gap ?? 0) * (fixedGap ? 1 : this.layout.gapScale);
     const n = b.widths.length;
     let cols;
     if (b.abs) {
@@ -792,7 +1037,8 @@ class Composer {
       const row = Array.isArray(r) ? { cells: r } : r;
       const cells = [];
       row.cells.forEach((c, i) => {
-        const pad = typeof (c.pad ?? 0) === "number" ? Array(4).fill(c.pad ?? 0) : c.pad;
+        const raw = typeof (c.pad ?? 0) === "number" ? Array(4).fill(c.pad ?? 0) : c.pad;
+        const pad = raw.map((v) => round(v * this.layout.padScale, 1));
         const inner = Math.max(12, cols[i] - pad[1] - pad[3]);
         cells.push({
           fill: c.fill ? this.color(c.fill) : null,
@@ -810,16 +1056,78 @@ class Composer {
       widths = [];
       cols.forEach((c, i) => {
         widths.push(c);
-        if (i < cols.length - 1) widths.push(gap);
+        if (i < cols.length - 1) widths.push(round(gap));
       });
     }
     const used = round(widths.reduce((a, c) => a + c, 0));
     return { t: "grid", width: used, cols: widths, rows, align: b.align || (used < width - 1 ? "center" : "left") };
   }
+
+  /** Flowing columns. Word uses native section columns; other editors use the estimated split. */
+  columns(b, width) {
+    const count = clamp(Math.round(b.count || 2), 1, 4);
+    const gap = round((b.gap ?? 18) * this.layout.gapScale, 1);
+    const colWidth = round((width - gap * (count - 1)) / count);
+    const blocks = this.blocks(b.blocks || [], colWidth);
+    return {
+      t: "columns",
+      count,
+      gap,
+      width: round(width),
+      colWidth,
+      rule: b.rule ? { color: this.color((b.rule && b.rule.color) || "line"), weight: (b.rule && b.rule.weight) || 0.75 } : null,
+      blocks,
+      split: splitForColumns(blocks, count, colWidth),
+    };
+  }
+}
+
+/** Rough height of a resolved block in points, used to balance columns. */
+function estimateHeight(b, width) {
+  switch (b.t) {
+    case "p": {
+      const text = b.runs.map((r) => r.text).join("");
+      const lines = text.split("\n").reduce((n, line) => n + Math.max(1, Math.ceil((line.length * b.size * 0.5) / Math.max(24, width - (b.bullet ? b.bullet.indent : 0)))), 0);
+      return lines * b.size * b.line * 1.17 + b.before + b.after;
+    }
+    case "rule":
+      return b.before + b.after + b.weight;
+    case "spacer":
+      return b.height;
+    case "image":
+      return b.height + b.before + b.after;
+    case "grid":
+      return b.rows.reduce((sum, r) => {
+        const content = Math.max(0, ...r.cells.map((c, i) => c.pad[0] + c.pad[2] + c.blocks.reduce((s, x) => s + estimateHeight(x, Math.max(12, b.cols[i] - c.pad[1] - c.pad[3])), 0)));
+        return sum + Math.max(r.height || 0, content);
+      }, 0);
+    case "columns":
+      return b.blocks.reduce((s, x) => s + estimateHeight(x, b.colWidth), 0) / b.count;
+    default:
+      return 0;
+  }
+}
+
+/** Indexes where columns 2..n begin, balancing estimated heights without splitting a block. */
+function splitForColumns(blocks, count, width) {
+  if (count < 2 || blocks.length < 2) return [];
+  const heights = blocks.map((b) => estimateHeight(b, width));
+  const total = heights.reduce((a, c) => a + c, 0);
+  const starts = [];
+  let acc = 0;
+  let k = 1;
+  for (let i = 0; i < blocks.length && k < count; i++) {
+    if (acc >= (total * k) / count && i > (starts[starts.length - 1] ?? 0)) {
+      starts.push(i);
+      k++;
+    }
+    acc += heights[i];
+  }
+  return starts;
 }
 
 /** Helpers handed to template build functions. */
-function makeContext(composer, page, options, template) {
+function makeContext(composer, page, options, template, records) {
   const W = round(page.width - page.margins.left - page.margins.right);
   const H = round(page.height - page.margins.top - page.margins.bottom);
   return {
@@ -829,7 +1137,11 @@ function makeContext(composer, page, options, template) {
     H,
     info: composer.info,
     opt: options,
+    layout: composer.layout,
     hasLogo: !!(composer.theme.logo && composer.theme.logo.src),
+    /** Merge records (from a pasted list), or the template's sample records. */
+    records,
+    hasRecords: !!(options.records && options.records.length),
     /**
      * Column widths for n equal panels that line up with the folds of the full sheet.
      * The outer panels give up the page margin; the inner ones are a full third (or half).
@@ -850,46 +1162,132 @@ function makeContext(composer, page, options, template) {
   };
 }
 
+function resolveOptions(template, options) {
+  const opts = {};
+  for (const o of template.options || []) {
+    const fallback = typeof o.default === "function" ? o.default() : o.default;
+    let v = options[o.key] ?? fallback;
+    if (o.type === "number") v = Number.isFinite(Number(v)) ? Number(v) : fallback;
+    if (o.type === "boolean") v = v === true || v === "true";
+    if (o.type === "select" && o.choices && !o.choices.some((c) => c.value === v)) v = fallback;
+    opts[o.key] = v;
+  }
+  return opts;
+}
+
+/** Builds the footer (if the template has one), leaving {page} and {pages} for the renderer. */
+function resolveFooter(composer, template, ctx) {
+  const spec = typeof template.footer === "function" ? template.footer(ctx) : template.footer;
+  if (!spec) return null;
+  const p = composer.paragraph({ t: "p", text: spec.text, role: spec.role || "small", align: spec.align || "center", color: spec.color || "muted", after: 0, fixed: true });
+  return { ...p, align: spec.align || "center" };
+}
+
 /**
  * Composes a template into a resolved model.
  * @param template  an entry from TEMPLATES
- * @param theme     { colorScheme, customColors, fontScheme, paper, business, logo }
+ * @param theme     { colorScheme, customColors, fontScheme, customFonts, paper, business, logo, layout }
  * @param platform  "word", "google", or "web"
- * @param options   values for the template's own options (for example, the calendar month)
+ * @param options   the template's own options plus Customize settings:
+ *                  { paperSize, orientation, margins, layout, records, print }
  */
 function compose(template, theme, platform, options = {}) {
-  const composer = new Composer(theme, platform);
-  const page = resolvePage(template, composer.theme.paper);
-  const opts = {};
-  for (const o of template.options || []) opts[o.key] = options[o.key] ?? (typeof o.default === "function" ? o.default() : o.default);
-  const ctx = makeContext(composer, page, opts, template);
+  const layout = { ...DEFAULT_LAYOUT, ...((theme && theme.layout) || {}), ...(options.layout || {}) };
+  const composer = new Composer(theme, platform, layout);
+  const page = resolvePage(template, composer.theme.paper, options);
+  const opts = resolveOptions(template, options);
+  const records = normalizeRecords(options.records && options.records.length ? options.records : (template.merge && template.merge.sample) || []);
+  const ctx = makeContext(composer, page, { ...opts, records: options.records || null }, template, records);
   const raw = template.build(ctx);
-  const blocks = composer.blocks(raw, ctx.W);
+
+  const printSpec = typeof template.print === "function" ? template.print(ctx) : template.print;
+  const print = { ...DEFAULT_PRINT, ...(printSpec || {}), ...(options.print || {}) };
+
+  let modelPage = page;
+  let blocks;
+  let pages = null;
+  let booklet = null;
+  if (raw && !Array.isArray(raw) && raw.pages) {
+    // Booklets: pages in reading order, padded to a multiple of four.
+    pages = raw.pages.map((pg) => composer.blocks(pg, ctx.W));
+    while (pages.length % 4) pages.splice(pages.length - 1, 0, []);
+    booklet = {
+      pages: pages.length,
+      sheet: { width: round(page.width * 2), height: page.height },
+      spreads: bookletSpreads(pages.length),
+    };
+    if (platform === "google") {
+      // Google Docs has no booklet printing, so Offizin lays out the printer spreads itself.
+      const m = page.margins;
+      modelPage = { width: round(page.width * 2), height: page.height, orientation: "landscape", margins: { ...m }, sizeName: null };
+      const rowH = round(page.height - m.top - m.bottom - 10);
+      blocks = [];
+      booklet.spreads.forEach(([l, r], i) => {
+        if (i) blocks.push({ t: "break" });
+        blocks.push({
+          t: "grid",
+          width: round(page.width * 2 - m.left - m.right),
+          cols: [round(page.width - m.left), round(page.width - m.right)],
+          rows: [
+            {
+              height: rowH,
+              exact: false,
+              cells: [
+                { fill: null, pad: [0, m.right, 0, 0], valign: "top", border: null, blocks: pages[l] },
+                { fill: null, pad: [0, 0, 0, m.left], valign: "top", border: null, blocks: pages[r] },
+              ],
+            },
+          ],
+          align: "left",
+        });
+      });
+      print.bookFold = false;
+      print.duplex = "short";
+    } else {
+      blocks = [];
+      pages.forEach((pg, i) => {
+        if (i) blocks.push({ t: "break" });
+        blocks.push(...pg);
+      });
+      if (platform === "word") print.bookFold = true;
+    }
+  } else {
+    blocks = composer.blocks(raw, ctx.W);
+  }
+
   return {
     version: MODEL_VERSION,
     templateId: template.id,
     name: template.name,
-    page,
-    folds: template.folds ? template.folds(ctx) : null,
+    page: modelPage,
+    folds: booklet && platform === "google" ? { vertical: [0.5], horizontal: [] } : template.folds ? template.folds(ctx) : null,
     colors: composer.colors,
     fonts: composer.fonts,
+    styles: composer.styles(),
     blocks,
+    pages,
+    booklet,
+    footer: resolveFooter(composer, template, ctx),
+    print,
     samples: [...composer.samples],
     missingInfo: composer.missingInfo,
+    options: { ...opts, paperSize: options.paperSize || null, orientation: options.orientation || null, margins: options.margins || null, layout: composer.layout, records: options.records || null },
     theme: {
       colorScheme: composer.theme.colorScheme,
       customColors: composer.theme.customColors,
       fontScheme: composer.theme.fontScheme,
+      customFonts: composer.theme.customFonts,
     },
   };
 }
 
 /** Composes a building block (a page part) for insertion at the cursor. */
 function composePart(part, theme, platform, width = 468) {
-  const composer = new Composer(theme, platform);
+  const composer = new Composer(theme, platform, theme && theme.layout);
   const ctx = {
     W: width,
     info: composer.info,
+    layout: composer.layout,
     hasLogo: !!(composer.theme.logo && composer.theme.logo.src),
     opt: {},
     setVar(key, value) {
@@ -897,7 +1295,7 @@ function composePart(part, theme, platform, width = 468) {
     },
   };
   const blocks = composer.blocks(part.build(ctx), width);
-  return { blocks, samples: [...composer.samples], colors: composer.colors, fonts: composer.fonts };
+  return { blocks, samples: [...composer.samples], colors: composer.colors, fonts: composer.fonts, styles: composer.styles() };
 }
 
 /**
@@ -911,23 +1309,31 @@ function restyleMap(fromTheme, toTheme, platform) {
   for (const key of Object.keys(a)) {
     if (a[key] !== b[key] && !colors[a[key]]) colors[a[key]] = b[key];
   }
-  const fa = fontsFor(findFontScheme(fromTheme.fontScheme), platform);
-  const fb = fontsFor(findFontScheme(toTheme.fontScheme), platform);
+  const fa = fontsFor(findFontScheme(fromTheme.fontScheme, fromTheme.customFonts), platform);
+  const fb = fontsFor(findFontScheme(toTheme.fontScheme, toTheme.customFonts), platform);
   const fonts = {};
   if (fa.heading.name !== fb.heading.name) fonts[fa.heading.name] = fb.heading.name;
   if (fa.body.name !== fb.body.name && !fonts[fa.body.name]) fonts[fa.body.name] = fb.body.name;
   return { colors, fonts };
 }
 
-/** Walks every block, including those nested in grid cells. */
+/** The reverse of a restyle map, for undo. */
+function invertRestyleMap(map) {
+  const flip = (o) => Object.fromEntries(Object.entries(o || {}).map(([k, v]) => [v, k]));
+  return { colors: flip(map.colors), fonts: flip(map.fonts) };
+}
+
+/** Walks every block, including those nested in grid cells and columns. */
 function walkBlocks(blocks, visit) {
   for (const b of blocks) {
     visit(b);
     if (b.t === "grid") for (const r of b.rows) for (const c of r.cells) walkBlocks(c.blocks, visit);
+    if (b.t === "columns") walkBlocks(b.blocks, visit);
   }
 }
 
-return { MODEL_VERSION, ROLES, BUSINESS_FIELDS, DEFAULT_THEME, themeColors, businessValues, resolvePage, compose, composePart, restyleMap, walkBlocks };
+
+return { MODEL_VERSION, ROLES, ROLE_STYLES, BUSINESS_FIELDS, DEFAULT_LAYOUT, LAYOUT_LIMITS, DEFAULT_PRINT, DEFAULT_THEME, customizeFor, themeColors, businessValues, clampLayout, resolvePage, normalizeRecords, bookletSpreads, estimateHeight, splitForColumns, compose, composePart, restyleMap, invertRestyleMap, walkBlocks };
 })();
 
 // docs/app/render/zip.js
@@ -1152,25 +1558,35 @@ function readLogoFile(file, max = 800) {
 return { prepareImages, readLogoFile };
 })();
 
-// docs/app/core/templates.js
-const __oz_core_templates_js = (() => {
+// docs/app/core/dsl.js
+const __oz_core_dsl_js = (() => {
 /**
- * The Offizin publication library and page parts.
+ * Building blocks for writing Offizin templates.
  *
- * Each template describes one publication with simple blocks:
- *   p (paragraph), list, rule, spacer, break (new page), image, band, grid, table.
- * Text can use business information fields such as {org} and {phone}, which the composer
- * fills from the user's business information (or friendly samples until it is filled in).
- * "**bold**" marks bold words inside a paragraph.
+ * A template's build(ctx) returns an array of these blocks (or, for booklets, { pages: [...] }).
+ * The composer (compose.js) resolves roles, color tokens, {fields}, spacing, and widths.
  *
- * Sizes are in points (72 points = 1 inch). ctx.W and ctx.H are the usable width and height
- * of the page inside its margins. See compose.js for everything the composer accepts.
+ *   p(text, role, options)        a paragraph. Roles: display, title, headline, h1, h2, kicker,
+ *                                 lead, body, small, caption, quote, label, button.
+ *                                 Options: align, color, size, bold, italic, caps, before, after,
+ *                                 line, fixed (not sample text), indent: { left, hanging }.
+ *   list(items, options)          bulleted paragraphs (native bullets in Word and Google Docs)
+ *   rule(options)                 a horizontal line: color, weight, width, align, before, after
+ *   space(height)                 vertical space
+ *   pageBreak()                   start a new page
+ *   pic(w, h, options)            a picture placeholder ("full" width allowed)
+ *   logoBox(w, h, options)        the user's logo, or a placeholder
+ *   band(blocks, options)         a full-width colored box: fill, pad, width, height, align
+ *   grid(widths, rows, options)   a layout table. Rows are arrays of cells or { height, exact, cells }.
+ *                                 Options: gap, abs (widths in points), fixedGap (keep gap exact),
+ *                                 width, align, border.
+ *   cell(blocks, options)         a grid cell: fill, pad, valign, border
+ *   table(header, rows, options)  a data table with a colored header row
+ *   columns(count, blocks, opts)  text that flows from column to column: gap, rule
+ *                                 (native columns in Word; balanced columns elsewhere)
+ *   scope(vars, blocks)           blocks with extra {fields}, used for mail merge records
  */
-const { inch, mm, round, MONTHS, WEEKDAYS } = __oz_core_util_js;
-
-// ---------------------------------------------------------------------------
-// Block helpers
-// ---------------------------------------------------------------------------
+const { round, mm } = __oz_core_util_js;
 
 const p = (text, role = "body", o = {}) => ({ t: "p", text, role, ...o });
 const list = (items, o = {}) => ({ t: "list", items, role: "body", ...o });
@@ -1183,9 +1599,14 @@ const band = (blocks, o = {}) => ({ t: "band", blocks, ...o });
 const grid = (widths, rows, o = {}) => ({ t: "grid", widths, rows, ...o });
 const cell = (blocks, o = {}) => ({ blocks, ...o });
 const table = (header, rows, o = {}) => ({ t: "table", header, rows, ...o });
+const columns = (count, blocks, o = {}) => ({ t: "columns", count, blocks, ...o });
+const scope = (vars, blocks) => ({ t: "scope", vars, blocks });
 
 /** A label with the value under it, used for dates, times, and places. */
-const detail = (label, value, o = {}) => [p(label, "label", { align: o.align || "center", color: o.labelColor || "accent", fixed: true }), p(value, "h2", { align: o.align || "center", after: 0, color: o.color, size: o.size })];
+const detail = (label, value, o = {}) => [
+  p(label, "label", { align: o.align || "center", color: o.labelColor || "accent", fixed: true }),
+  p(value, "h2", { align: o.align || "center", after: 0, color: o.color, size: o.size }),
+];
 
 /** Contact lines from business information. */
 const contactLines = (o = {}) => [
@@ -1195,14 +1616,19 @@ const contactLines = (o = {}) => [
 
 /** Logo when the user has one, otherwise the organization name set as a wordmark. */
 const brandMark = (ctx, w, h, o = {}) =>
-  ctx.hasLogo ? logoBox(w, h, { align: o.align || "left", after: o.after ?? 8 }) : p("{org}", "h2", { align: o.align || "left", color: o.color || "primary", after: o.after ?? 6, size: o.size });
+  ctx.hasLogo
+    ? logoBox(w, h, { align: o.align || "left", after: o.after ?? 8 })
+    : p("{org}", "h2", { align: o.align || "left", color: o.color || "primary", after: o.after ?? 6, size: o.size });
 
+/** Fold guide positions for a sheet folded into n equal panels. */
 const panelFolds = (n) => () => ({ vertical: Array.from({ length: n - 1 }, (_, i) => (i + 1) / n), horizontal: [] });
 
 const PANEL_PAD = 20;
+
+/** Padding for panel i of n: the outer edges already have the page margin. */
 const panelPad = (i, n) => [PANEL_PAD, i === n - 1 ? 4 : PANEL_PAD, PANEL_PAD, i === 0 ? 4 : PANEL_PAD];
 
-/** Sheet layout for cards and labels: where a grid of equal pieces sits on the page. */
+/** Page margins that center a grid of equal pieces (cards, labels, badges) on a sheet. */
 function sheetMargins(paper, pieceW, pieceH, across, down, gapX = 0, gapY = 0) {
   const page = paper === "a4" ? { width: mm(210), height: mm(297) } : { width: 612, height: 792 };
   const usedW = across * pieceW + (across - 1) * gapX;
@@ -1212,6 +1638,55 @@ function sheetMargins(paper, pieceW, pieceH, across, down, gapX = 0, gapY = 0) {
   return { top, bottom: top, left: side, right: side };
 }
 
+/** Light dashed cut guides for cards, badges, and tickets. */
+const CUT_GUIDE = { all: { color: "line", weight: 0.25, style: "dashed" } };
+
+/** Splits merge records into groups of `size` (one group per printed sheet). */
+function chunk(records, size) {
+  const out = [];
+  for (let i = 0; i < records.length; i += size) out.push(records.slice(i, i + size));
+  return out.length ? out : [[]];
+}
+
+return { p, list, rule, space, pageBreak, pic, logoBox, band, grid, cell, table, columns, scope, detail, contactLines, brandMark, panelFolds, PANEL_PAD, panelPad, sheetMargins, CUT_GUIDE, chunk };
+})();
+
+// docs/app/core/templates/resumes.js
+const __oz_core_templates_resumes_js = (() => {
+/** Resumes and CVs. Filled in by the template work for version 2.1. */
+const RESUME_TEMPLATES = [];
+
+return { RESUME_TEMPLATES };
+})();
+
+// docs/app/core/templates/more.js
+const __oz_core_templates_more_js = (() => {
+/** Additional publications for version 2.1. */
+const MORE_TEMPLATES = [];
+const MORE_FOLD_GUIDES = {};
+
+return { MORE_TEMPLATES, MORE_FOLD_GUIDES };
+})();
+
+// docs/app/core/templates.js
+const __oz_core_templates_js = (() => {
+/**
+ * The Offizin publication library and page parts.
+ *
+ * Each template describes one publication with the blocks in dsl.js:
+ *   p (paragraph), list, rule, spacer, break (new page), image, band, grid, table, columns, scope.
+ * Text can use business information fields such as {org} and {phone}, which the composer
+ * fills from the user's business information (or friendly samples until it is filled in).
+ * "**bold**" marks bold words inside a paragraph.
+ *
+ * Sizes are in points (72 points = 1 inch). ctx.W and ctx.H are the usable width and height
+ * of the page inside its margins. See compose.js for everything the composer accepts.
+ */
+const { inch, mm, round, MONTHS, WEEKDAYS } = __oz_core_util_js;
+const { p, list, rule, space, pageBreak, pic, logoBox, band, grid, cell, table, columns, scope, detail, contactLines, brandMark, panelFolds, panelPad, PANEL_PAD, sheetMargins, CUT_GUIDE, chunk } = __oz_core_dsl_js;
+const { RESUME_TEMPLATES } = __oz_core_templates_resumes_js;
+const { MORE_TEMPLATES, MORE_FOLD_GUIDES } = __oz_core_templates_more_js;
+
 // ---------------------------------------------------------------------------
 // Publications
 // ---------------------------------------------------------------------------
@@ -1220,14 +1695,62 @@ const CATEGORIES = [
   { id: "all", name: "All" },
   { id: "brochures", name: "Brochures" },
   { id: "newsletters", name: "Newsletters" },
-  { id: "flyers", name: "Flyers and posters" },
+  { id: "flyers", name: "Flyers, posters, and signs" },
   { id: "cards", name: "Cards and invitations" },
-  { id: "programs", name: "Programs and menus" },
-  { id: "stationery", name: "Stationery and labels" },
+  { id: "programs", name: "Programs, booklets, and menus" },
+  { id: "stationery", name: "Stationery and envelopes" },
+  { id: "labels", name: "Labels, badges, and tickets" },
+  { id: "resumes", name: "Resumes and CVs" },
   { id: "calendars", name: "Calendars and certificates" },
 ];
 
-const TEMPLATES = [
+const FLAT_SIZES = ["letter", "legal", "tabloid", "halfLetter", "a3", "a4", "a5"];
+
+/** One certificate page, for a merge record or for the sample recipient. */
+function certificatePage(ctx, r) {
+  const recipient = r && r.recipient ? r.recipient : "Recipient Name";
+  const reason = r && r.reason ? r.reason : "in recognition of outstanding dedication, leadership, and service during the past year.";
+  const date = r && r.date ? r.date : "Date";
+      const inner = [
+        p("{org}", "kicker", { align: "center", after: 14 }),
+        p("Certificate of Achievement", "title", { align: "center", size: 34 }),
+        rule({ color: "accent", weight: 1.5, width: 80, align: "center", before: 4, after: 16 }),
+        p("This certificate is proudly presented to", "body", { align: "center", italic: true, color: "muted", after: 10 }),
+        p(recipient, "display", { align: "center", size: 40, color: "accent", italic: true, after: 12, fixed: !!(r && r.recipient) }),
+        p(reason, "body", { align: "center", size: 12, after: 30, fixed: !!(r && r.reason) }),
+        grid(
+          [1, 0.3, 1],
+          [
+            [
+              cell([rule({ color: "dark", weight: 0.75, before: 0, after: 4 }), p("{name}, {title}", "small", { align: "center", after: 0 })]),
+              cell([]),
+              cell([rule({ color: "dark", weight: 0.75, before: 0, after: 4 }), p(date, "small", { align: "center", after: 0, fixed: true })]),
+            ],
+          ],
+          { width: round(ctx.W * 0.7) }
+        ),
+      ];
+      return [
+        grid(
+          [ctx.W],
+          [
+            {
+              height: ctx.H - 10,
+              cells: [
+                cell([grid([ctx.W - 16], [{ height: ctx.H - 26, cells: [cell(inner, { pad: 30, valign: "middle", border: { all: { color: "accent", weight: 1 } } })] }], { abs: true })], {
+                  pad: 7,
+                  border: { all: { color: "primary", weight: 4 } },
+                }),
+              ],
+            },
+          ],
+          { abs: true }
+        ),
+      ];
+
+}
+
+const CORE_TEMPLATES = [
   {
     id: "trifold",
     name: "Tri-fold brochure",
@@ -1235,6 +1758,8 @@ const TEMPLATES = [
     description: "Six panels on one sheet, printed on both sides and folded in thirds.",
     sizeLabel: "Landscape, 2 sides, folds in thirds",
     fold: "trifold",
+    print: { duplex: "short", paper: "24 to 32 lb (90 to 120 g/m\u00B2) paper folds cleanly. Use card stock for a sturdier piece.", finishing: "Fold the right panel in first, then fold the left panel over it." },
+    customize: { paper: ["letter", "legal", "a4"] },
     page: { size: "paper", orientation: "landscape", margins: 27 },
     folds: panelFolds(3),
     build(ctx) {
@@ -1342,6 +1867,8 @@ const TEMPLATES = [
     description: "A four page booklet from one sheet, folded in half.",
     sizeLabel: "Landscape, 2 sides, folds in half",
     fold: "halffold",
+    print: { duplex: "short", paper: "24 to 32 lb (90 to 120 g/m\u00B2) paper folds cleanly. Use card stock for a sturdier piece.", finishing: "Fold in half with side 2 inside." },
+    customize: { paper: ["letter", "legal", "tabloid", "a4", "a3"] },
     page: { size: "paper", orientation: "landscape", margins: 27 },
     folds: panelFolds(2),
     build(ctx) {
@@ -1433,6 +1960,9 @@ const TEMPLATES = [
     description: "A two page newsletter with a masthead, lead story, sidebar, and contact strip.",
     sizeLabel: "Portrait, 2 pages",
     fold: "none",
+    print: { duplex: "long", paper: "Plain copy paper works well. Use 24 lb (90 g/m\u00B2) for a heavier feel." },
+    customize: { paper: ["letter", "legal", "a4"] },
+    footer: { text: "{org} News  |  Page {page} of {pages}", align: "center" },
     page: { size: "paper", orientation: "portrait", margins: 36 },
     build(ctx) {
       const now = new Date();
@@ -1481,28 +2011,23 @@ const TEMPLATES = [
           { gap: 18 }
         ),
         pageBreak(),
-        grid(
-          [1, 1],
+        // Text flows from the first column into the second, like linked text boxes.
+        columns(
+          2,
           [
-            [
-              cell([
-                p("Member spotlight", "kicker"),
-                p("Meet someone who makes it happen", "h1"),
-                pic("full", 130, { after: 8 }),
-                p("Profile a member, volunteer, or client. Ask three questions and share the best answers in their own words."),
-                p("A short profile builds community and gives readers a reason to open the next issue."),
-              ]),
-              cell([
-                p("From the director", "kicker"),
-                p("A note on the season ahead", "h1"),
-                p("Use this column for a personal message. Thank people, name what is changing, and say what you hope to accomplish together."),
-                p("Keep it warm and specific. Mention one achievement and one challenge, and invite readers to help with the challenge."),
-                p("Your name", "h2", { before: 6, after: 0 }),
-                p("Your title", "caption"),
-              ]),
-            ],
+            p("Member spotlight", "kicker"),
+            p("Meet someone who makes it happen", "h1"),
+            pic("full", 130, { after: 8 }),
+            p("Profile a member, volunteer, or client. Ask three questions and share the best answers in their own words."),
+            p("A short profile builds community and gives readers a reason to open the next issue."),
+            p("From the director", "kicker", { before: 8 }),
+            p("A note on the season ahead", "h1"),
+            p("Use this column for a personal message. Thank people, name what is changing, and say what you hope to accomplish together."),
+            p("Keep it warm and specific. Mention one achievement and one challenge, and invite readers to help with the challenge."),
+            p("Your name", "h2", { before: 6, after: 0 }),
+            p("Your title", "caption"),
           ],
-          { gap: 18 }
+          { gap: 18, rule: true }
         ),
         space(14),
         grid(
@@ -1527,6 +2052,7 @@ const TEMPLATES = [
     description: "A bold one page flyer with a picture, event details, and a call to action.",
     sizeLabel: "Portrait, 1 page",
     fold: "none",
+    customize: { paper: FLAT_SIZES },
     page: { size: "paper", orientation: "portrait", margins: 36 },
     build(ctx) {
       return [
@@ -1556,6 +2082,7 @@ const TEMPLATES = [
     description: "An announcement with offers and a cut-out coupon.",
     sizeLabel: "Portrait, 1 page",
     fold: "none",
+    customize: { paper: FLAT_SIZES },
     page: { size: "paper", orientation: "portrait", margins: 36 },
     build(ctx) {
       return [
@@ -1616,6 +2143,8 @@ const TEMPLATES = [
     description: "A large format poster for walls and windows.",
     sizeLabel: "Tabloid or A3, portrait",
     fold: "none",
+    print: { paper: "For posters larger than your printer, save as PDF and send it to a print shop." },
+    customize: { paper: ["tabloid", "a3", "letter", "legal", "a4"] },
     page: (paper) => ({ size: paper === "a4" ? "a3" : "tabloid", orientation: "portrait", margins: 48 }),
     build(ctx) {
       return [
@@ -1641,6 +2170,7 @@ const TEMPLATES = [
     description: "A clear landscape sign for doors, desks, and events.",
     sizeLabel: "Landscape, 1 page",
     fold: "none",
+    customize: { paper: FLAT_SIZES, orientation: true },
     page: { size: "paper", orientation: "landscape", margins: 40 },
     build(ctx) {
       return [
@@ -1662,6 +2192,8 @@ const TEMPLATES = [
     description: "Ten 3.5 x 2 inch cards per sheet, filled from your business information.",
     sizeLabel: "10 per sheet, with cut guides",
     fold: "cards",
+    print: { paper: "Card stock, 80 to 110 lb cover (216 to 300 g/m\u00B2).", finishing: "Cut on the dashed guides with a paper trimmer." },
+    customize: { paper: false, margins: false },
     page: (paper) => ({ size: "paper", orientation: "portrait", margins: sheetMargins(paper, 252, 144, 2, 5) }),
     folds: () => ({ vertical: [], horizontal: [], cut: true }),
     build(ctx) {
@@ -1689,6 +2221,8 @@ const TEMPLATES = [
     description: "Two 6 x 4 inch postcards per sheet, with fronts on side 1 and mailing backs on side 2.",
     sizeLabel: "2 per sheet, 2 sides",
     fold: "cards",
+    print: { duplex: "long", paper: "Card stock, 80 to 110 lb cover (216 to 300 g/m\u00B2).", finishing: "Cut on the dashed guides." },
+    customize: { paper: false, margins: false },
     page: (paper) => ({ size: "paper", orientation: "portrait", margins: sheetMargins(paper, 432, 288, 1, 2) }),
     folds: () => ({ vertical: [], horizontal: [], cut: true }),
     build(ctx) {
@@ -1751,6 +2285,8 @@ const TEMPLATES = [
     description: "A folded card: front and back on side 1, the message inside on side 2.",
     sizeLabel: "Landscape, 2 sides, folds in half",
     fold: "halffold",
+    print: { duplex: "short", paper: "Card stock, 80 to 110 lb cover (216 to 300 g/m\u00B2).", finishing: "Fold in half with side 2 inside." },
+    customize: { paper: ["letter", "a4"] },
     page: { size: "paper", orientation: "landscape", margins: 27 },
     folds: panelFolds(2),
     build(ctx) {
@@ -1811,6 +2347,8 @@ const TEMPLATES = [
     description: "A framed invitation on a 5 x 7 inch card (A5 for A4 paper).",
     sizeLabel: "5 x 7 in or A5",
     fold: "none",
+    print: { paper: "Card stock, 80 to 110 lb cover (216 to 300 g/m\u00B2)." },
+    customize: { paper: ["card5x7", "a5", "halfLetter", "letter", "a4"] },
     page: (paper) => ({ size: paper === "a4" ? "a5" : "card5x7", orientation: "portrait", margins: 22 }),
     build(ctx) {
       return [
@@ -1851,6 +2389,8 @@ const TEMPLATES = [
     description: "A folded program with a cover, welcome, schedule, and thanks.",
     sizeLabel: "Landscape, 2 sides, folds in half",
     fold: "halffold",
+    print: { duplex: "short", paper: "24 to 32 lb (90 to 120 g/m\u00B2) paper folds cleanly. Use card stock for a sturdier piece.", finishing: "Fold in half with side 2 inside." },
+    customize: { paper: ["letter", "legal", "tabloid", "a4", "a3"] },
     page: { size: "paper", orientation: "landscape", margins: 27 },
     folds: panelFolds(2),
     build(ctx) {
@@ -1948,6 +2488,8 @@ const TEMPLATES = [
     description: "A one page menu with sections, descriptions, and prices.",
     sizeLabel: "Portrait, 1 page",
     fold: "none",
+    print: { paper: "Heavy matte paper or card stock holds up best at the table." },
+    customize: { paper: FLAT_SIZES },
     page: { size: "paper", orientation: "portrait", margins: 42 },
     build(ctx) {
       const item = (name, desc, price) => [
@@ -1991,6 +2533,8 @@ const TEMPLATES = [
     description: "Branded letter paper with your logo, address, and a sample letter.",
     sizeLabel: "Portrait, 1 page",
     fold: "none",
+    print: { paper: "24 lb (90 g/m\u00B2) bond paper gives letters a professional feel." },
+    customize: { paper: ["letter", "legal", "a4"] },
     page: { size: "paper", orientation: "portrait", margins: { top: 40, right: 54, bottom: 40, left: 54 } },
     build(ctx) {
       return [
@@ -2020,25 +2564,62 @@ const TEMPLATES = [
   {
     id: "labels",
     name: "Address labels",
-    category: "stationery",
-    description: "Return address labels: 30 per Letter sheet (2.625 x 1 in) or 21 per A4 sheet (63.5 x 38.1 mm).",
+    category: "labels",
+    description: "Return address labels, or one label per person from a pasted list: 30 per Letter sheet (2.625 x 1 in) or 21 per A4 sheet (63.5 x 38.1 mm).",
     sizeLabel: "30 per sheet (Letter), 21 per sheet (A4)",
     fold: "cards",
+    print: { paper: "Label sheets with the same layout: 30 labels of 2.625 x 1 in (Letter) or 21 labels of 63.5 x 38.1 mm (A4).", finishing: "Print a test on plain paper first and hold it over a label sheet to check alignment." },
+    customize: { paper: false, margins: false },
     page: (paper) =>
       paper === "a4"
         ? { size: "paper", orientation: "portrait", margins: { top: round(mm(15.15)), bottom: round(mm(15.15)), left: round(mm(7.21)), right: round(mm(7.21)) } }
         : { size: "paper", orientation: "portrait", margins: { top: 36, bottom: 36, left: 13.5, right: 13.5 } },
     folds: () => ({ vertical: [], horizontal: [], cut: true }),
+    merge: {
+      fields: [
+        { key: "name", label: "Name", aliases: ["full name", "recipient", "addressee"] },
+        { key: "company", label: "Company", aliases: ["organization", "organisation"] },
+        { key: "address", label: "Street address", aliases: ["address 1", "address line 1", "street"] },
+        { key: "address2", label: "Address line 2", aliases: ["apt", "suite", "unit", "address 2"] },
+        { key: "city", label: "City", aliases: ["town", "city state zip"] },
+        { key: "state", label: "State or region", aliases: ["province", "region", "county"] },
+        { key: "postal", label: "Postal code", aliases: ["zip", "zip code", "postcode"] },
+        { key: "country", label: "Country" },
+      ],
+      sample: [],
+      note: "Paste a list to print one label per person. Leave it empty to print your own return address on every label.",
+    },
     build(ctx) {
       const a4 = ctx.paper === "a4";
       const w = a4 ? round(mm(63.5)) : 189;
       const h = a4 ? round(mm(38.1)) : 72;
       const gap = a4 ? round(mm(2.54)) : 9;
       const down = a4 ? 7 : 10;
-      const label = () =>
+      const perSheet = down * 3;
+      const returnLabel = () =>
         cell([p("{org}", "small", { bold: true, color: "primary", after: 1 }), p("{address}\n{city}", "small", { after: 0, line: 1.2 })], { pad: [4, 10, 4, 12], valign: "middle" });
-      const rows = Array.from({ length: down }, () => ({ height: h, exact: true, cells: [label(), label(), label()] }));
-      return [grid([w, w, w], rows, { abs: true, gap, align: "center" })];
+      const mailLabel = (r) => {
+        const place = [r.city, [r.state, r.postal].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+        const lines = [r.company, r.address, r.address2, place, r.country].filter(Boolean);
+        return cell(
+          [p(r.name || "", "small", { bold: true, color: "dark", after: 1, fixed: true }), lines.length ? p(lines.join("\n"), "small", { after: 0, line: 1.15, fixed: true }) : null],
+          { pad: [4, 10, 4, 12], valign: "middle" }
+        );
+      };
+      const sheet = (cells) => {
+        const rows = [];
+        for (let i = 0; i < down; i++) rows.push({ height: h, exact: true, cells: cells.slice(i * 3, i * 3 + 3) });
+        return grid([w, w, w], rows, { abs: true, gap, align: "center" });
+      };
+      if (!ctx.hasRecords) return [sheet(Array.from({ length: perSheet }, returnLabel))];
+      const out = [];
+      chunk(ctx.records, perSheet).forEach((group, i) => {
+        if (i) out.push(pageBreak());
+        const cells = group.map(mailLabel);
+        while (cells.length < perSheet) cells.push(cell([], { pad: 0 }));
+        out.push(sheet(cells));
+      });
+      return out;
     },
   },
 
@@ -2049,17 +2630,30 @@ const TEMPLATES = [
     description: "A month at a glance, generated for any month and year.",
     sizeLabel: "Landscape, 1 page",
     fold: "none",
+    customize: { paper: FLAT_SIZES, orientation: true },
     page: { size: "paper", orientation: "landscape", margins: 30 },
     options: [
       { key: "month", label: "Month", type: "month", default: () => new Date().getMonth() + 1 },
       { key: "year", label: "Year", type: "number", default: () => new Date().getFullYear() },
+      {
+        key: "weekStart",
+        label: "Weeks start on",
+        type: "select",
+        choices: [
+          { value: "sunday", label: "Sunday" },
+          { value: "monday", label: "Monday" },
+        ],
+        default: "sunday",
+      },
     ],
     build(ctx) {
       const month = Math.min(12, Math.max(1, Number(ctx.opt.month) || 1));
       const year = Number(ctx.opt.year) || new Date().getFullYear();
       ctx.setVar("calMonth", MONTHS[month - 1]);
       ctx.setVar("calYear", year);
-      const first = new Date(year, month - 1, 1).getDay();
+      const startDay = ctx.opt.weekStart === "monday" ? 1 : 0;
+      const first = (new Date(year, month - 1, 1).getDay() - startDay + 7) % 7;
+      const dayNames = WEEKDAYS.slice(startDay).concat(WEEKDAYS.slice(0, startDay));
       const days = new Date(year, month, 0).getDate();
       const weeks = Math.ceil((first + days) / 7);
       const headerH = 62;
@@ -2067,14 +2661,15 @@ const TEMPLATES = [
       const rowH = round((ctx.H - headerH - dayRowH - 16) / weeks);
       const border = { all: { color: "line", weight: 0.5 } };
       const rows = [
-        { cells: WEEKDAYS.map((d) => cell([p(d, "label", { color: "onPrimary", align: "center", after: 0, fixed: true })], { fill: "primary", pad: 5 })) },
+        { cells: dayNames.map((d) => cell([p(d, "label", { color: "onPrimary", align: "center", after: 0, fixed: true })], { fill: "primary", pad: 5 })) },
       ];
       let n = 1 - first;
       for (let wk = 0; wk < weeks; wk++) {
         const cells = [];
         for (let d = 0; d < 7; d++, n++) {
           const inMonth = n >= 1 && n <= days;
-          cells.push(cell(inMonth ? [p(String(n), "h2", { color: d === 0 ? "accent" : "dark", after: 0, size: 11, fixed: true })] : [], { pad: [4, 6, 4, 6], border, fill: inMonth ? null : "tint" }));
+          const sunday = dayNames[d] === "Sunday";
+          cells.push(cell(inMonth ? [p(String(n), "h2", { color: sunday ? "accent" : "dark", after: 0, size: 11, fixed: true })] : [], { pad: [4, 6, 4, 6], border, fill: inMonth ? null : "tint" }));
         }
         rows.push({ height: rowH, cells });
       }
@@ -2103,54 +2698,37 @@ const TEMPLATES = [
     description: "A framed certificate of achievement with signature lines.",
     sizeLabel: "Landscape, 1 page",
     fold: "none",
+    print: { paper: "Card stock, 80 to 110 lb cover (216 to 300 g/m\u00B2). Parchment or bright white stock looks best." },
+    customize: { paper: ["letter", "legal", "a4"] },
     page: { size: "paper", orientation: "landscape", margins: 30 },
+    merge: {
+      fields: [
+        { key: "recipient", label: "Recipient name", aliases: ["name", "full name", "student", "employee"] },
+        { key: "reason", label: "Reason or achievement", aliases: ["achievement", "for", "award", "description"] },
+        { key: "date", label: "Date", aliases: ["awarded", "date awarded"] },
+      ],
+      sample: [],
+      note: "Paste a list of names to print one certificate per person. Reason and date are optional.",
+    },
     build(ctx) {
-      const inner = [
-        p("{org}", "kicker", { align: "center", after: 14 }),
-        p("Certificate of Achievement", "title", { align: "center", size: 34 }),
-        rule({ color: "accent", weight: 1.5, width: 80, align: "center", before: 4, after: 16 }),
-        p("This certificate is proudly presented to", "body", { align: "center", italic: true, color: "muted", after: 10 }),
-        p("Recipient Name", "display", { align: "center", size: 40, color: "accent", italic: true, after: 12 }),
-        p("in recognition of outstanding dedication, leadership, and service during the past year.", "body", { align: "center", size: 12, after: 30 }),
-        grid(
-          [1, 0.3, 1],
-          [
-            [
-              cell([rule({ color: "dark", weight: 0.75, before: 0, after: 4 }), p("{name}, {title}", "small", { align: "center", after: 0 })]),
-              cell([]),
-              cell([rule({ color: "dark", weight: 0.75, before: 0, after: 4 }), p("Date", "small", { align: "center", after: 0, fixed: true })]),
-            ],
-          ],
-          { width: round(ctx.W * 0.7) }
-        ),
-      ];
-      return [
-        grid(
-          [ctx.W],
-          [
-            {
-              height: ctx.H - 10,
-              cells: [
-                cell([grid([ctx.W - 16], [{ height: ctx.H - 26, cells: [cell(inner, { pad: 30, valign: "middle", border: { all: { color: "accent", weight: 1 } } })] }], { abs: true })], {
-                  pad: 7,
-                  border: { all: { color: "primary", weight: 4 } },
-                }),
-              ],
-            },
-          ],
-          { abs: true }
-        ),
-      ];
+      const people = ctx.hasRecords ? ctx.records : [null];
+      const out = [];
+      people.forEach((r, i) => {
+        if (i) out.push(pageBreak());
+        out.push(...certificatePage(ctx, r));
+      });
+      return out;
     },
   },
 
   {
     id: "resume",
-    name: "Resume",
-    category: "stationery",
-    description: "A clean one page resume with a sidebar for skills and contact details.",
+    name: "Designed resume",
+    category: "resumes",
+    description: "A designed one page resume with a shaded sidebar, for printing and handing out. For online applications, use a plain resume: screening software reads it more reliably.",
     sizeLabel: "Portrait, 1 page",
     fold: "none",
+    customize: { paper: ["letter", "a4"] },
     page: { size: "paper", orientation: "portrait", margins: 36 },
     build(ctx) {
       const job = (role, place, dates, text) => [p(role, "h2", { after: 0 }), p(`${place}  |  ${dates}`, "caption", { after: 3 }), p(text, "small", { after: 9 })];
@@ -2196,6 +2774,8 @@ const TEMPLATES = [
     },
   },
 ];
+
+const TEMPLATES = [...CORE_TEMPLATES, ...RESUME_TEMPLATES, ...MORE_TEMPLATES];
 
 function findTemplate(id) {
   return TEMPLATES.find((t) => t.id === id) || null;
@@ -2309,7 +2889,7 @@ function findPart(id) {
 }
 
 /** Plain words for the fold types, used by the print and fold guide. */
-const FOLD_GUIDES = {
+const BASE_FOLD_GUIDES = {
   trifold: {
     title: "Folding a tri-fold brochure",
     steps: [
@@ -2344,6 +2924,8 @@ const FOLD_GUIDES = {
     tip: "Most home printers cannot print to the very edge of the paper. Offizin keeps important content inside a safe margin.",
   },
 };
+
+const FOLD_GUIDES = { ...BASE_FOLD_GUIDES, ...MORE_FOLD_GUIDES };
 
 return { CATEGORIES, TEMPLATES, findTemplate, PARTS, findPart, FOLD_GUIDES };
 })();
