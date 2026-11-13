@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.4 (2026-11-13)
+
+- The website, the README, and the panel describe Offizin on its own terms, without comparisons to other products. Every main page of the website, and the live demo's Install menu, says that Offizin is not affiliated with Microsoft or Google.
+
 ## 2.1.3 (2026-11-13)
 
 - The website is ready for search engines: every page has its own title, description, address, and link preview, the home page and the live demo describe Offizin as free software in a form search engines read, and the site has a sitemap, a robots file, and favicons in the sizes search results use.

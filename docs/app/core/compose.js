@@ -60,7 +60,7 @@ export const ROLE_STYLES = {
   button: { word: "OffizinButton", name: "Offizin Button", google: "NORMAL" },
 };
 
-/** Business information, in the spirit of Publisher's business information sets. */
+/** Business information, filled into every template. */
 export const BUSINESS_FIELDS = [
   { key: "name", label: "Your name", sample: "Jordan Rivera" },
   { key: "title", label: "Job title", sample: "Program Director" },
@@ -862,7 +862,7 @@ export function composePart(part, theme, platform, width = 468) {
 
 /**
  * Old-to-new color and font replacements for restyling an existing publication,
- * Publisher style: switch the scheme and the publication follows.
+ * so a publication follows when the scheme changes.
  */
 export function restyleMap(fromTheme, toTheme, platform) {
   const a = palette(themeColors({ ...DEFAULT_THEME, ...fromTheme }));

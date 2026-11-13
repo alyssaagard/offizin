@@ -14,13 +14,11 @@ Brochures, newsletters, flyers, cards, and more, built from templates in your ow
 
 ---
 
-Microsoft Publisher reached its end of life in October 2026. Offizin keeps the parts of Publisher people relied on, and puts them inside the word processor they already use. It is free and open source for personal, business, school, and enterprise use, it needs no account, and it has no server.
-
-*Offizin* is the old German word for a printing house; Gutenberg's workshop was an Offizin.
+Offizin brings desktop publishing into the word processor people already use, Microsoft Word or Google Docs. It is free and open source for personal, business, school, and enterprise use, it needs no account, and it has no server.
 
 ## What it does
 
-| Publisher feature | In Offizin |
+| Feature | In Offizin |
 |---|---|
 | Publication gallery | 33 publications, each for Letter or A4 paper: tri-fold and bi-fold brochures; newsletter; event flyer, sale flyer, poster, sign, and photo page; business cards, postcards, greeting card, invitation, bookmarks, and place cards; event program, menu, and booklets of 4 to 16 pages; letterhead, envelope, and invoice; address labels, name badges, and tickets; a designed resume plus six plain resumes and CVs that screening software reads reliably; monthly calendar, certificate, and gift certificates. |
 | Page setup and layout | Customize each publication: paper size, orientation, margins (with Word's Narrow, Moderate, Normal, and Wide presets), text size, line spacing, paragraph spacing, padding, and the gaps between columns. Default spacing and text for everything live on the Design tab. |
@@ -102,4 +100,4 @@ Offizin 2.0 replaces three earlier repositories, which are kept for reference: [
 
 [MIT](LICENSE). Copyright 2026 Alyssa I. Agard.
 
-Offizin is not affiliated with Microsoft or Google. Microsoft, Word, and Publisher are trademarks of the Microsoft group of companies; Google Docs and Google Workspace are trademarks of Google LLC.
+Offizin is an independent project and is not affiliated with, endorsed by, or sponsored by Microsoft or Google. Microsoft, Microsoft 365, and Word are trademarks of the Microsoft group of companies; Google Docs and Google Workspace are trademarks of Google LLC. These names are used only to say which editors Offizin works with.

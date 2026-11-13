@@ -815,7 +815,7 @@ const ROLE_STYLES = {
   button: { word: "OffizinButton", name: "Offizin Button", google: "NORMAL" },
 };
 
-/** Business information, in the spirit of Publisher's business information sets. */
+/** Business information, filled into every template. */
 const BUSINESS_FIELDS = [
   { key: "name", label: "Your name", sample: "Jordan Rivera" },
   { key: "title", label: "Job title", sample: "Program Director" },
@@ -1617,7 +1617,7 @@ function composePart(part, theme, platform, width = 468) {
 
 /**
  * Old-to-new color and font replacements for restyling an existing publication,
- * Publisher style: switch the scheme and the publication follows.
+ * so a publication follows when the scheme changes.
  */
 function restyleMap(fromTheme, toTheme, platform) {
   const a = palette(themeColors({ ...DEFAULT_THEME, ...fromTheme }));
@@ -1788,8 +1788,7 @@ const __oz_render_pictures_js = (() => {
  * Picture placeholders as real images, drawn in the browser with a canvas.
  *
  * In Word, right-click a placeholder and choose Change Picture. In Google Docs, select it and
- * choose Replace image. The new picture takes the placeholder's size and position, the way
- * picture frames worked in Publisher.
+ * choose Replace image. The new picture takes the placeholder's size and position.
  */
 const { walkBlocks } = __oz_core_compose_js;
 const { parseDataUrl } = __oz_render_zip_js;
@@ -5716,7 +5715,7 @@ const __oz_ui_panel_js = (() => {
  * to create publications, insert parts, change page setup, restyle, and check a document in
  * its own editor (see app/hosts/). That keeps the three versions identical for users.
  *
- * Tabs follow the way Publisher worked:
+ * Tabs:
  *   Create  pick a publication; customize its paper, margins, spacing, text, and print
  *           settings; and merge a pasted list into labels, badges, envelopes, and more
  *   Design  color and font schemes (or your own), default spacing and text, page setup,
@@ -7348,7 +7347,7 @@ function mountPanel(root, host, opts = {}) {
   function renderInfo() {
     const fields = state.sets[state.activeSet] || {};
     body.innerHTML = `
-      <p class="oz-muted">Publications fill in this information for you, the way business information sets worked in Publisher.</p>
+      <p class="oz-muted">Publications fill in this information for you.</p>
       <div class="oz-row2">
         <label class="oz-field"><span>Information set</span>
           <select data-action="set">${Object.keys(state.sets).map((n) => `<option value="${escapeHtml(n)}"${n === state.activeSet ? " selected" : ""}>${escapeHtml(n)}</option>`).join("")}</select>
