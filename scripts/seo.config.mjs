@@ -27,7 +27,7 @@ export const SEO_PAGES = [
     file: "index.html",
     title: "Offizin | Desktop publishing for Word and Google Docs",
     description:
-      "Free desktop publishing for Microsoft Word and Google Docs. Make brochures, newsletters, flyers, cards, and resumes from templates. A Publisher alternative.",
+      "Desktop publishing for Microsoft Word and Google Docs: make brochures, newsletters, flyers, cards, and resumes from templates. Free and open source.",
     schema: "site",
     priority: "1.0",
   },

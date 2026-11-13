@@ -2,8 +2,7 @@
  * Picture placeholders as real images, drawn in the browser with a canvas.
  *
  * In Word, right-click a placeholder and choose Change Picture. In Google Docs, select it and
- * choose Replace image. The new picture takes the placeholder's size and position, the way
- * picture frames worked in Publisher.
+ * choose Replace image. The new picture takes the placeholder's size and position.
  */
 import { walkBlocks } from "../core/compose.js";
 import { parseDataUrl } from "./zip.js";

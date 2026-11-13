@@ -6,7 +6,7 @@
  * to create publications, insert parts, change page setup, restyle, and check a document in
  * its own editor (see app/hosts/). That keeps the three versions identical for users.
  *
- * Tabs follow the way Publisher worked:
+ * Tabs:
  *   Create  pick a publication; customize its paper, margins, spacing, text, and print
  *           settings; and merge a pasted list into labels, badges, envelopes, and more
  *   Design  color and font schemes (or your own), default spacing and text, page setup,
@@ -1650,7 +1650,7 @@ export function mountPanel(root, host, opts = {}) {
   function renderInfo() {
     const fields = state.sets[state.activeSet] || {};
     body.innerHTML = `
-      <p class="oz-muted">Publications fill in this information for you, the way business information sets worked in Publisher.</p>
+      <p class="oz-muted">Publications fill in this information for you.</p>
       <div class="oz-row2">
         <label class="oz-field"><span>Information set</span>
           <select data-action="set">${Object.keys(state.sets).map((n) => `<option value="${escapeHtml(n)}"${n === state.activeSet ? " selected" : ""}>${escapeHtml(n)}</option>`).join("")}</select>
