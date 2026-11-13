@@ -1,0 +1,5 @@
+# Offizin: every public page may be read and indexed.
+User-agent: *
+Allow: /
+
+Sitemap: https://offizin.alyssaagard.dev/sitemap.xml

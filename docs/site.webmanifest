@@ -1,0 +1,22 @@
+{
+  "name": "Offizin: desktop publishing for Word and Google Docs",
+  "short_name": "Offizin",
+  "description": "Free desktop publishing for Microsoft Word and Google Docs. Make brochures, newsletters, flyers, cards, and resumes from templates. A Publisher alternative.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "browser",
+  "background_color": "#F4F8FC",
+  "theme_color": "#F4F8FC",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

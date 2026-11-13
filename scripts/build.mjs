@@ -9,6 +9,8 @@
  *   docs/download/offizin-word.zip         the Word package: the manifest and a plain text guide
  *   docs/download/offizin-google-docs.zip  the Google Docs package: the three Apps Script files
  *                                          and a plain text guide
+ *   docs/sitemap.xml, docs/robots.txt, docs/site.webmanifest, and the search and sharing tags
+ *   in the head of every public page, from scripts/seo.config.mjs
  *
  * Usage: npm run build   (Node 18 or later; no packages needed)
  */
@@ -16,6 +18,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { SITE_URL, ADDIN_ID, VERSION, PROVIDER, REPO_URL, GOOGLE_STARTER_COPY_URL, RELEASE_DATE } from "./site.config.mjs";
+import { SITE_NAME, SOCIAL_IMAGE, SEO_PAGES } from "./seo.config.mjs";
 import { zip } from "../docs/app/render/zip.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -358,6 +361,130 @@ export function googlePackage(files, site = SITE_URL) {
 // Build
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Search engines and link previews
+// ---------------------------------------------------------------------------
+
+const SEO_START = "<!-- seo:start (written by npm run build from scripts/seo.config.mjs; edit that file) -->";
+const SEO_END = "<!-- seo:end -->";
+const attr = (text) => String(text).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/** Structured data (schema.org) for a page, as an object, or null. */
+export function seoSchema(page, site = SITE_URL) {
+  const author = { "@type": "Person", "@id": `${site}/#author`, name: PROVIDER };
+  const free = { "@type": "Offer", price: "0", priceCurrency: "USD" };
+  if (page.schema === "site") {
+    return {
+      "@context": "https://schema.org",
+      "@graph": [
+        { "@type": "WebSite", "@id": `${site}/#website`, url: `${site}/`, name: SITE_NAME, description: page.description, inLanguage: "en", publisher: { "@id": `${site}/#author` } },
+        author,
+        {
+          "@type": "SoftwareApplication",
+          "@id": `${site}/#software`,
+          name: SITE_NAME,
+          description: page.description,
+          url: `${site}/`,
+          image: `${site}/assets/icons/icon-512.png`,
+          applicationCategory: "DesignApplication",
+          operatingSystem: "Microsoft Word for Windows, Mac, and the web; Google Docs",
+          softwareVersion: VERSION,
+          offers: free,
+          isAccessibleForFree: true,
+          license: "https://opensource.org/licenses/MIT",
+          author: { "@id": `${site}/#author` },
+          sameAs: [REPO_URL],
+        },
+      ],
+    };
+  }
+  if (page.schema === "demo") {
+    return {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      name: `${SITE_NAME} live demo`,
+      description: page.description,
+      url: `${site}/${page.path}`,
+      applicationCategory: "DesignApplication",
+      operatingSystem: "Any",
+      browserRequirements: "Requires JavaScript",
+      offers: free,
+      isAccessibleForFree: true,
+      isPartOf: { "@id": `${site}/#website` },
+      author: { "@type": "Person", name: PROVIDER },
+    };
+  }
+  return null;
+}
+
+/** The tags between the seo comments in a page's head: title, description, address, icons, and previews. */
+export function seoBlock(page, site = SITE_URL) {
+  const up = "../".repeat(page.path.split("/").filter(Boolean).length);
+  const url = `${site}/${page.path}`;
+  const schema = seoSchema(page, site);
+  const lines = [
+    SEO_START,
+    `<title>${attr(page.title)}</title>`,
+    `<meta name="description" content="${attr(page.description)}">`,
+    `<meta name="author" content="${attr(PROVIDER)}">`,
+    `<meta name="robots" content="index, follow, max-image-preview:large">`,
+    `<link rel="canonical" href="${url}">`,
+    `<meta property="og:type" content="website">`,
+    `<meta property="og:site_name" content="${attr(SITE_NAME)}">`,
+    `<meta property="og:title" content="${attr(page.title)}">`,
+    `<meta property="og:description" content="${attr(page.description)}">`,
+    `<meta property="og:url" content="${url}">`,
+    `<meta property="og:image" content="${site}/${SOCIAL_IMAGE.path}">`,
+    `<meta property="og:image:width" content="${SOCIAL_IMAGE.width}">`,
+    `<meta property="og:image:height" content="${SOCIAL_IMAGE.height}">`,
+    `<meta property="og:image:alt" content="${attr(SOCIAL_IMAGE.alt)}">`,
+    `<meta name="twitter:card" content="summary_large_image">`,
+    `<meta name="theme-color" content="#F4F8FC">`,
+    `<link rel="icon" href="${up}favicon.ico" sizes="any">`,
+    `<link rel="icon" href="${up}favicon.svg" type="image/svg+xml">`,
+    `<link rel="icon" href="${up}assets/icons/icon-96.png" type="image/png" sizes="96x96">`,
+    `<link rel="icon" href="${up}assets/icons/icon-192.png" type="image/png" sizes="192x192">`,
+    `<link rel="apple-touch-icon" href="${up}apple-touch-icon.png">`,
+    `<link rel="manifest" href="${up}site.webmanifest">`,
+  ];
+  if (schema) lines.push(`<script type="application/ld+json">${JSON.stringify(schema).replace(/</g, "\\u003c")}</script>`);
+  lines.push(SEO_END);
+  return lines.join("\n  ");
+}
+
+/** A page with its seo block replaced by a fresh one. The page must already have the two comments. */
+export function applySeo(html, page, site = SITE_URL) {
+  const a = html.indexOf("<!-- seo:start");
+  const b = html.indexOf(SEO_END);
+  if (a < 0 || b < a) throw new Error(`${page.file} has no seo:start and seo:end comments in its head`);
+  return html.slice(0, a) + seoBlock(page, site) + html.slice(b + SEO_END.length);
+}
+
+export function sitemapXml(site = SITE_URL) {
+  const urls = SEO_PAGES.map((p) => `  <url>\n    <loc>${site}/${p.path}</loc>\n    <lastmod>${RELEASE_DATE}</lastmod>\n    <priority>${p.priority}</priority>\n  </url>`).join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+}
+
+export function robotsTxt(site = SITE_URL) {
+  return `# Offizin: every public page may be read and indexed.\nUser-agent: *\nAllow: /\n\nSitemap: ${site}/sitemap.xml\n`;
+}
+
+export function webManifest() {
+  const icon = (size) => ({ src: `assets/icons/icon-${size}.png`, sizes: `${size}x${size}`, type: "image/png" });
+  const manifest = {
+    name: `${SITE_NAME}: desktop publishing for Word and Google Docs`,
+    short_name: SITE_NAME,
+    description: SEO_PAGES[0].description,
+    start_url: "./",
+    scope: "./",
+    display: "browser",
+    background_color: "#F4F8FC",
+    theme_color: "#F4F8FC",
+    icons: [icon(192), icon(512)],
+  };
+  return JSON.stringify(manifest, null, 2) + "\n";
+}
+
 async function main() {
   console.log(`Building Offizin ${VERSION} for ${SITE_URL}`);
   const manifest = manifestXml();
@@ -384,6 +511,13 @@ async function main() {
     path.join(ROOT, "docs/version.json"),
     JSON.stringify({ name: "Offizin", version: VERSION, site: SITE_URL, repository: REPO_URL, googleStarterCopyUrl: GOOGLE_STARTER_COPY_URL }, null, 2) + "\n"
   );
+  for (const page of SEO_PAGES) {
+    const file = path.join(ROOT, "docs", page.file);
+    write(file, applySeo(fs.readFileSync(file, "utf8"), page));
+  }
+  write(path.join(ROOT, "docs/sitemap.xml"), sitemapXml());
+  write(path.join(ROOT, "docs/robots.txt"), robotsTxt());
+  write(path.join(ROOT, "docs/site.webmanifest"), webManifest());
   console.log("Done.");
 }
 

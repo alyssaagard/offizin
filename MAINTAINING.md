@@ -6,7 +6,7 @@ Notes for publishing Offizin and keeping it running. Everything here is done by 
 
 1. Make changes in `docs/app/`, `google-docs/`, or `scripts/`.
 2. If it is a release, raise `VERSION` and set `RELEASE_DATE` in `scripts/site.config.mjs`, raise `OZ_VERSION` in `google-docs/Code.gs`, and add a line to `CHANGELOG.md`. The build stamps the download packages with `RELEASE_DATE`, so set it before building, or the committed packages carry the previous date.
-3. Run `npm run build` and `npm run check`. Both must pass. Each area also has its own tests in `scripts/tests/` (Word, Google Docs, templates, colors, styles, demo, panel, packages), and `node scripts/check.mjs --only=word` runs just one of them while you work on that area. The packages test and the GitHub workflow both compare the committed packages in `docs/download` with a fresh build, so a changed guide or file without a rebuild fails the check. The panel's in-document tests drive the panel in jsdom, which `npm install` provides. If jsdom lives in another folder, set `OFFIZIN_JSDOM` to that folder (the one that holds its `node_modules`). Without jsdom those tests are skipped with a note, and the GitHub check does not install packages, so it skips them too.
+3. Run `npm run build` and `npm run check`. Both must pass. Each area also has its own tests in `scripts/tests/` (Word, Google Docs, templates, colors, styles, demo, panel, packages, seo), and `node scripts/check.mjs --only=word` runs just one of them while you work on that area. The packages test and the GitHub workflow both compare the committed packages in `docs/download` with a fresh build, so a changed guide or file without a rebuild fails the check. The panel's in-document tests drive the panel in jsdom, which `npm install` provides. If jsdom lives in another folder, set `OFFIZIN_JSDOM` to that folder (the one that holds its `node_modules`). Without jsdom those tests are skipped with a note, and the GitHub check does not install packages, so it skips them too.
 4. Commit and push to `main`. GitHub Pages publishes `docs/` within a minute or two.
 
 Word users get the new version automatically, because Word loads Offizin from the website. Google Docs users who pasted the code update by pasting it again (the install page says so), so mention Google changes in the changelog.
@@ -59,6 +59,19 @@ When Code.gs changes, update the three files in the starter document as well.
 2. Set up GitHub Pages and the custom domain again in the new organization (the steps above). Keep `offizin.alyssaagard.dev`, or choose a company subdomain and follow "To use a different address".
 3. Change `PROVIDER` in `scripts/site.config.mjs` to the company's legal name, and update the copyright line in `LICENSE` if the company now holds the copyright.
 4. Keep `ADDIN_ID` the same: it identifies the add-in to Word.
+
+## Search engines and link previews
+
+The title, description, and link preview of every public page live in `scripts/seo.config.mjs`. `npm run build` writes them into each page between the `seo:start` and `seo:end` comments, and writes `docs/sitemap.xml`, `docs/robots.txt`, and `docs/site.webmanifest`. Edit the config file, never the text between the comments. A new public page needs an entry there and the two comments in its head; any other HTML page needs `<meta name="robots" content="noindex">`. The seo test checks all of this.
+
+Search engines find the site on their own in time, but asking them is faster:
+
+1. In [Google Search Console](https://search.google.com/search-console), add the property `offizin.alyssaagard.dev` (the "Domain" kind asks for a TXT record at the DNS provider; the "URL prefix" kind accepts an HTML file placed in `docs/`).
+2. Under Sitemaps, submit `https://offizin.alyssaagard.dev/sitemap.xml`.
+3. Under URL inspection, enter the home page and the demo and choose Request indexing.
+4. Do the same in [Bing Webmaster Tools](https://www.bing.com/webmasters), which can import the site from Search Console.
+
+Google shows a favicon in results only after it has crawled the home page again, which can take from a few days to a few weeks. After a change of address, update `SITE_URL`, rebuild, and submit the new sitemap.
 
 ## Brand assets
 

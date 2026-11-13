@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.3 (2026-11-13)
+
+- The website is ready for search engines: every page has its own title, description, address, and link preview, the home page and the live demo describe Offizin as free software in a form search engines read, and the site has a sitemap, a robots file, and favicons in the sizes search results use.
+- Pages that are not meant to be found on their own (the Word task pane, the Google sidebar file, and the old demo address) ask search engines to leave them out.
+
 ## 2.1.2 (2026-11-13)
 
 - The preview shows the two-page resume and the CVs on two pages, the way Word and Google Docs lay them out, instead of warning that text runs past the first page. Headings stay with the text that follows them.
