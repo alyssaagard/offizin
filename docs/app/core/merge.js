@@ -74,7 +74,11 @@ export function parseRecords(text, fields) {
     matched = hits.map((i) => (i >= 0 ? fields[i].key : null));
     body = rows.slice(1);
     const missing = fields.filter((f) => !matched.includes(f.key)).map((f) => f.label);
-    if (missing.length) warnings.push(`No column found for: ${missing.join(", ")}.`);
+    if (missing.length) {
+      const names = missing.length < 3 ? missing.join(" and ") : `${missing.slice(0, -1).join(", ")}, and ${missing[missing.length - 1]}`;
+      const one = missing.length === 1;
+      warnings.push(`Your list has no ${names} column${one ? "" : "s"}, so ${one ? "that line stays" : "those lines stay"} blank.`);
+    }
   } else {
     matched = fields.map((f) => f.key).slice(0, Math.max(...rows.map((r) => r.length)));
   }

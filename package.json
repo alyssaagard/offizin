@@ -1,6 +1,6 @@
 {
   "name": "offizin",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "Offizin: desktop publishing for Microsoft Word and Google Docs. Brochures, newsletters, flyers, cards, and more, with no server.",
   "author": "Alyssa I. Agard",
@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@resvg/resvg-js": "2.6.2",
+    "jsdom": "25.0.1",
     "opentype.js": "2.0.0"
   },
   "engines": {

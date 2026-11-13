@@ -6,13 +6,17 @@
  *   docs/google-docs/Code.gs        copied from google-docs/Code.gs
  *   docs/google-docs/appsscript.json
  *   docs/version.json
+ *   docs/download/offizin-word.zip         the Word package: the manifest and a plain text guide
+ *   docs/download/offizin-google-docs.zip  the Google Docs package: the three Apps Script files
+ *                                          and a plain text guide
  *
  * Usage: npm run build   (Node 18 or later; no packages needed)
  */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { SITE_URL, ADDIN_ID, VERSION, PROVIDER, REPO_URL, GOOGLE_STARTER_COPY_URL } from "./site.config.mjs";
+import { SITE_URL, ADDIN_ID, VERSION, PROVIDER, REPO_URL, GOOGLE_STARTER_COPY_URL, RELEASE_DATE } from "./site.config.mjs";
+import { zip } from "../docs/app/render/zip.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DEFAULT_SITE = "https://offizin.alyssaagard.dev";
@@ -192,12 +196,172 @@ export function manifestXml(site = SITE_URL) {
 }
 
 // ---------------------------------------------------------------------------
+// Download packages
+// ---------------------------------------------------------------------------
+
+/** The guide inside the Word package. Plain text, so it opens anywhere. */
+export function wordReadme(site = SITE_URL) {
+  return `Offizin ${VERSION} for Microsoft Word
+Desktop publishing inside Word: brochures, newsletters, flyers, cards, labels,
+resumes, and more. By ${PROVIDER}. ${site}
+
+WHAT IS IN THIS PACKAGE
+
+  offizin-manifest.xml  The add-in manifest. It tells Word where Offizin
+                        lives and which buttons to add. It holds no program
+                        code. Offizin has no server, no account, and no
+                        tracking.
+  README.txt            This guide.
+
+Word installs add-ins from the manifest file itself. Unzip this package first,
+then give Word the file offizin-manifest.xml (not the zip).
+
+WORD ON THE WEB (personal, work, or school accounts)
+
+  1. Open any document in Word on the web at office.com.
+  2. On the Home tab, select Add-ins, then More Settings (or More Add-ins).
+  3. Choose Upload My Add-in, browse to offizin-manifest.xml, and select
+     Upload.
+  4. The Offizin tab appears in the ribbon. Select Publications to start.
+
+WORD FOR MAC
+
+  1. Quit Word.
+  2. In Finder, choose Go, then Go to Folder, and open this folder (create the
+     wef folder if it does not exist):
+     ~/Library/Containers/com.microsoft.Word/Data/Documents/wef
+  3. Move offizin-manifest.xml into the wef folder.
+  4. Open Word and any document. Select Home, then Add-ins, and choose Offizin.
+
+WORD FOR WINDOWS
+
+  Word for Windows installs single add-ins from a shared folder.
+  1. Put offizin-manifest.xml in a folder, for example C:\\OffizinAddin. In the
+     folder's Properties, open Sharing, select Share, share it with yourself,
+     and copy its network path, such as \\\\YOUR-PC\\OffizinAddin.
+  2. In Word, choose File, Options, Trust Center, Trust Center Settings, then
+     Trusted Add-in Catalogs. Paste the network path into Catalog Url, select
+     Add catalog, check Show in Menu, and select OK. Restart Word.
+  3. Select Home, then Add-ins, then Advanced (or More Add-ins). Open Shared
+     Folder, choose Offizin, and select Add.
+
+A WHOLE ORGANIZATION (Microsoft 365 administrators)
+
+  1. In the Microsoft 365 admin center, go to Settings, then Integrated apps.
+  2. Select Upload custom apps and choose Office Add-in as the app type.
+  3. Upload offizin-manifest.xml from this package, or provide the link
+     ${site}/word/manifest.xml instead.
+  4. Choose who gets Offizin (just you, chosen groups, or everyone). Select
+     Next, accept the permission request if Microsoft asks, select Next again,
+     and then select Finish deployment.
+  5. Offizin usually appears in Word on the web, Windows, and Mac within a day,
+     but Microsoft says it can take up to 72 hours, and people may need to
+     restart Word.
+
+UPDATES AND HELP
+
+  Word loads Offizin from ${site} each time it opens, so there is nothing to
+  reinstall when a new version comes out. Help: ${site}/support/
+`;
+}
+
+/** The guide inside the Google Docs package. */
+export function googleReadme(site = SITE_URL) {
+  return `Offizin ${VERSION} for Google Docs
+Desktop publishing inside Google Docs: brochures, newsletters, flyers, cards,
+labels, resumes, and more. By ${PROVIDER}. ${site}
+
+WHAT IS IN THIS PACKAGE
+
+  Code.gs          The Offizin menu and the code that builds publications.
+  Sidebar.html     The Offizin panel.
+  appsscript.json  The project settings. Offizin asks only for access to the
+                   document it is in.
+  README.txt       This guide.
+
+Google Docs has no upload box for add-ins outside the Google Workspace
+Marketplace, so these files go into a document's own Apps Script project. You
+do this once, in a starter document, and then copy that document.
+
+ADD OFFIZIN TO A DOCUMENT (about three minutes)
+
+  1. Open a Google Doc, or a new one at docs.new. If it is pageless, choose
+     File, Page setup, then Pages.
+  2. Choose Extensions, then Apps Script. Rename the project Offizin.
+  3. Open Code.gs, select everything, and replace it with the contents of
+     Code.gs from this package.
+  4. Next to Files, select the plus sign, then HTML, and name the file Sidebar.
+     Replace everything in it with the contents of Sidebar.html.
+  5. Open Project Settings (the gear icon), check Show "appsscript.json"
+     manifest file in editor, then open appsscript.json in the editor and
+     replace everything in it with the contents of appsscript.json.
+  6. Save, close the Apps Script tab, and reload the document. Choose Offizin,
+     then Open Offizin, and allow access when Google asks. If Google lists the
+     two permissions with checkboxes, check both; Offizin needs both.
+
+  Keep this document empty as your starter. Each time you need a publication,
+  choose File, then Make a copy: Google copies Offizin along with the document.
+  Each copy asks for permission the first time Offizin opens in it. Settings
+  and business details stay with the document they were entered in, so save a
+  brand kit once (Info tab, Save brand kit) and open it in each copy.
+
+UPLOAD WITH CLASP (for IT teams and developers)
+
+  Google's command line tool, clasp, can upload these files for you.
+  1. Turn on the Google Apps Script API at script.google.com/home/usersettings.
+  2. Install and sign in:  npm install -g @google/clasp   then   clasp login
+  3. In an empty folder, create a starter document with its own project:
+     clasp create --type docs --title "Offizin starter"
+  4. Copy Code.gs, Sidebar.html, and appsscript.json from this package into
+     that folder. If clasp made a Code.js file, delete it, and let this
+     package's appsscript.json replace the one clasp made.
+  5. Run  clasp push --force  and open the new document from Google Drive.
+
+UPDATES AND HELP
+
+  Copies made this way do not update themselves. When a new version comes out,
+  paste the new files into your starter document (or run clasp push again);
+  documents copied from it afterward get the new version.
+  Help: ${site}/support/
+`;
+}
+
+/** Fixed timestamps (the release date), so a package only changes when its files do. */
+function releaseDate() {
+  const d = new Date(`${RELEASE_DATE}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? new Date(2026, 0, 1, 12) : d;
+}
+
+export function wordPackage(manifest, site = SITE_URL) {
+  return zip(
+    [
+      { name: "offizin-manifest.xml", data: manifest },
+      { name: "README.txt", data: wordReadme(site) },
+    ],
+    { date: releaseDate() }
+  );
+}
+
+export function googlePackage(files, site = SITE_URL) {
+  return zip(
+    [
+      { name: "Code.gs", data: files.code },
+      { name: "Sidebar.html", data: files.sidebar },
+      { name: "appsscript.json", data: files.manifest },
+      { name: "README.txt", data: googleReadme(site) },
+    ],
+    { date: releaseDate() }
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Build
 // ---------------------------------------------------------------------------
 
 async function main() {
   console.log(`Building Offizin ${VERSION} for ${SITE_URL}`);
-  write(path.join(ROOT, "docs/word/manifest.xml"), manifestXml());
+  const manifest = manifestXml();
+  write(path.join(ROOT, "docs/word/manifest.xml"), manifest);
 
   const { googleFontsHref } = await import(pathToFileURL(path.join(ROOT, "docs/app/core/schemes.js")).href);
   const swapSite = (text) => (SITE_URL === DEFAULT_SITE ? text : text.split(DEFAULT_SITE).join(SITE_URL));
@@ -209,9 +373,13 @@ async function main() {
     .replace("{{GOOGLE_FONTS}}", () => googleFontsHref().replace(/&/g, "&amp;"))
     .replace("{{PANEL_CSS}}", () => css)
     .replace("{{BUNDLE}}", () => js.replace(/<\/script/gi, "<\\/script"));
+  const code = swapSite(fs.readFileSync(path.join(ROOT, "google-docs/Code.gs"), "utf8"));
+  const appsscript = fs.readFileSync(path.join(ROOT, "google-docs/appsscript.json"), "utf8");
   write(path.join(ROOT, "docs/google-docs/Sidebar.html"), sidebar);
-  write(path.join(ROOT, "docs/google-docs/Code.gs"), swapSite(fs.readFileSync(path.join(ROOT, "google-docs/Code.gs"), "utf8")));
-  write(path.join(ROOT, "docs/google-docs/appsscript.json"), fs.readFileSync(path.join(ROOT, "google-docs/appsscript.json"), "utf8"));
+  write(path.join(ROOT, "docs/google-docs/Code.gs"), code);
+  write(path.join(ROOT, "docs/google-docs/appsscript.json"), appsscript);
+  write(path.join(ROOT, "docs/download/offizin-word.zip"), wordPackage(manifest));
+  write(path.join(ROOT, "docs/download/offizin-google-docs.zip"), googlePackage({ code, sidebar, manifest: appsscript }));
   write(
     path.join(ROOT, "docs/version.json"),
     JSON.stringify({ name: "Offizin", version: VERSION, site: SITE_URL, repository: REPO_URL, googleStarterCopyUrl: GOOGLE_STARTER_COPY_URL }, null, 2) + "\n"

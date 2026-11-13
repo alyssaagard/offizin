@@ -43,7 +43,8 @@ export const scope = (vars, blocks) => ({ t: "scope", vars, blocks });
 /** A label with the value under it, used for dates, times, and places. */
 export const detail = (label, value, o = {}) => [
   p(label, "label", { align: o.align || "center", color: o.labelColor || "accent", fixed: true }),
-  p(value, "h2", { align: o.align || "center", after: 0, color: o.color, size: o.size }),
+  // The value is always a placeholder, and some are too short for recordSample to record on its own.
+  p(value, "h2", { align: o.align || "center", after: 0, color: o.color, size: o.size, sample: true }),
 ];
 
 /** Contact lines from business information. */

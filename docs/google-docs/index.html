@@ -35,8 +35,8 @@
       <h2>The quick way: copy the starter document</h2>
       <ol class="steps">
         <li>Select the button below and choose <strong>Make a copy</strong>. Offizin comes with the copy.</li>
-        <li>In your copy, choose <strong>Offizin</strong>, then <strong>Open Offizin</strong>, and allow access when Google asks (see <a href="#permissions">permissions</a>).</li>
-        <li>Keep that copy as your starter. Each time you need a new publication, make a copy of it.</li>
+        <li>In your copy, choose <strong>Offizin</strong>, then <strong>Open Offizin</strong>, and allow access when Google asks (see <a href="#permissions">permissions</a>). Every copy asks the first time Offizin opens in it.</li>
+        <li>Keep that copy as your starter. Each time you need a new publication, make a copy of it. Your design and business details stay with the document you entered them in, so save a brand kit once on the <strong>Info</strong> tab and open it in each copy.</li>
       </ol>
       <p><a class="btn btn-primary" id="starter-link" href="#">Copy the starter document</a></p>
       <h2>Or add Offizin to any document yourself</h2>
@@ -44,6 +44,10 @@
 
     <section id="manual">
       <h2 id="manual-title">Add Offizin to a document (about three minutes)</h2>
+      <div class="file-row">
+        <span class="grow"><code>offizin-google-docs.zip</code><br><span class="small muted">Prefer one download? The package holds all three files and these steps in a text file. Google Docs has no upload box for add-ins outside its Marketplace, so the files still go in with the steps below, or with Google's clasp tool (see <a href="#clasp">For IT teams</a>).</span></span>
+        <a class="btn" href="../download/offizin-google-docs.zip" download>Download package</a>
+      </div>
       <ol class="steps">
         <li>Open the Google Doc you want to use, or a new one at <a href="https://docs.new">docs.new</a>. If it is a pageless document, choose <strong>File</strong>, <strong>Page setup</strong>, then <strong>Pages</strong>.</li>
         <li>Choose <strong>Extensions</strong>, then <strong>Apps Script</strong>. A code editor opens in a new tab. Click <strong>Untitled project</strong> at the top and rename it <strong>Offizin</strong>.</li>
@@ -62,7 +66,7 @@
         <li>Save with <kbd>Ctrl</kbd> <kbd>S</kbd> (or <kbd>Command</kbd> <kbd>S</kbd>), close the Apps Script tab, and reload your document.</li>
         <li>Choose <strong>Offizin</strong>, then <strong>Open Offizin</strong>. The first time, Google asks you to allow access.</li>
       </ol>
-      <p class="callout"><strong>Tip: make it your starter</strong>Name this document something like "Offizin starter" and leave it empty. Whenever you need a new brochure or flyer, choose <strong>File</strong>, then <strong>Make a copy</strong>. Google copies Offizin along with the document, so you only paste the code once.</p>
+      <p class="callout"><strong>Tip: make it your starter</strong>Name this document something like "Offizin starter" and leave it empty. Whenever you need a new brochure or flyer, choose <strong>File</strong>, then <strong>Make a copy</strong>. Google copies Offizin along with the document, so you only paste the code once. Each copy asks for permission the first time Offizin opens in it, and your design and business details stay with the document you entered them in, so save a brand kit once on the <strong>Info</strong> tab and open it in each copy.</p>
     </section>
 
     <h2 id="permissions">Permissions and the "unverified app" screen</h2>
@@ -71,22 +75,37 @@
       <li><strong>View and manage documents that this application has been installed in.</strong> Offizin can only change the document it is in. It cannot see your other files.</li>
       <li><strong>Display and run third-party web content in prompts and sidebars.</strong> This is what lets the Offizin panel open beside your document.</li>
     </ul>
-    <p>Because you pasted the code yourself, it runs as your own private script, and Google has not reviewed it. With a personal Gmail account, Google shows <strong>Google hasn't verified this app</strong>. Select <strong>Advanced</strong>, then <strong>Go to Offizin (unsafe)</strong>, then <strong>Allow</strong>. The wording is Google's standard text for any script that is not published in its Marketplace. In a Google Workspace organization, people in the same organization as the document's owner usually see the normal permission screen.</p>
+    <p>Because you pasted the code yourself, it runs as your own private script, and Google has not reviewed it. With a personal Gmail account, Google shows <strong>Google hasn't verified this app</strong>. Select <strong>Advanced</strong>, then <strong>Go to Offizin (unsafe)</strong>, then allow access. If Google lists the two permissions with checkboxes, check both (or <strong>Select all</strong>) before you continue: without the first, Offizin cannot change the document, and without the second, the panel cannot open. The wording is Google's standard text for any script that is not published in its Marketplace. In a Google Workspace organization, people in the same organization as the document's owner usually see the normal permission screen. Each copy of a document is its own script, so each copy asks the first time Offizin opens in it.</p>
 
     <h2>For Google Workspace organizations</h2>
     <div class="two-col">
       <div class="card">
         <h3>Share a starter document</h3>
-        <p>Set up one Offizin starter document, share it with your organization as view only, and ask people to make a copy. Each copy carries Offizin, and each person approves it once.</p>
+        <p>Set up one Offizin starter document, share it with your organization as view only, and ask people to make a copy. Each copy carries Offizin. Each copy is its own script, so Google asks each person for permission the first time Offizin opens in each copy, and settings stay with the copy they were entered in; a brand kit carries them from one copy to the next.</p>
       </div>
       <div class="card">
         <h3>Publish privately to your domain</h3>
-        <p>An administrator can publish Offizin as a private add-on through the Google Workspace Marketplace SDK, so it appears in every document under Extensions. This needs a Google Cloud project; see <a href="../support/#workspace">Help</a> for the steps.</p>
+        <p>An administrator can publish Offizin as a private add-on through the Google Workspace Marketplace SDK, so it appears in every document under Extensions. It is one script, so people approve it once and their saved details follow them from document to document. This needs a Google Cloud project; see <a href="../support/#workspace">Help</a> for the steps.</p>
       </div>
     </div>
 
+    <h2 id="clasp">For IT teams: upload with clasp</h2>
+    <p>Google's command line tool, <a href="https://github.com/google/clasp">clasp</a>, uploads the package's files in one step. Turn on the Google Apps Script API at <a href="https://script.google.com/home/usersettings">script.google.com/home/usersettings</a>, then:</p>
+    <ol class="steps">
+      <li>Install and sign in: <code>npm install -g @google/clasp</code>, then <code>clasp login</code>.</li>
+      <li>In an empty folder, run <code>clasp create --type docs --title "Offizin starter"</code>. This makes a new Google Doc with its own Apps Script project.</li>
+      <li>Copy <code>Code.gs</code>, <code>Sidebar.html</code>, and <code>appsscript.json</code> from the package into that folder. If clasp made a <code>Code.js</code> file, delete it, and let the package's <code>appsscript.json</code> replace the one clasp made.</li>
+      <li>Run <code>clasp push --force</code>, then open the new document from Google Drive and reload it.</li>
+    </ol>
+
+    <h2>Undo and printing in Google Docs</h2>
+    <ul>
+      <li><strong>Offizin's own Undo and Redo.</strong> The arrows at the top of the Offizin panel undo only what Offizin did, and leave your typing and Google Docs' own Undo alone. Undoing a page part removes it, and Redo puts it back with whatever you typed into it. Undoing a design puts the previous colors and fonts back. Undoing a new publication brings back the document as it was before, for up to six hours. The history lasts while the panel is open.</li>
+      <li><strong>Printing.</strong> Google Docs does not let add-ins change print settings, so the Check tab lists the steps: two-sided printing, the right edge to flip on, and actual size. Booklets come out already arranged in printing order, two pages to a sheet.</li>
+    </ul>
+
     <h2>Updating</h2>
-    <p>Pasted copies of Offizin do not update themselves. When a new version is released, repeat steps 3 to 5 in your starter document. Documents copied from it afterward get the new version. The current version is <strong id="version">2.0.0</strong>.</p>
+    <p>Pasted copies of Offizin do not update themselves. When a new version is released, repeat steps 3 to 5 in your starter document (or run <code>clasp push</code> again). Documents copied from it afterward get the new version. The current version is <strong id="version">2.1.0</strong>. Version 2.1 adds Offizin's own Undo and Redo, Customize settings for every publication, mail merge, booklets, plain resumes and CVs, and black and white designs, so paste the three new files to get them.</p>
   </main>
 
   <footer class="site-foot">

@@ -125,31 +125,12 @@ details.faq p { margin: 8px 0 0; }
 .ribbon .rbtn { display: flex; flex-direction: column; align-items: center; width: 84px; font-size: 12px; text-align: center; color: var(--ink-soft); }
 .ribbon .rbtn img { width: 32px; height: 32px; margin-bottom: 4px; }
 
-/* Demo page */
-.demo-body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-.demo-body .site-head { position: static; }
-.demo { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 360px; }
-.demo-canvas { display: flex; flex-direction: column; min-height: 0; background: #dde8f3; }
-.demo-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--bg); font-size: 14px; }
-.demo-bar label { display: inline-flex; align-items: center; gap: 6px; }
-.demo-bar select { font: 14px var(--ui); padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--paper); }
-.demo-bar .btn { min-height: 34px; padding: 6px 12px; font-size: 14px; }
-.demo-bar .spacer { flex: 1; }
-.demo-pages { flex: 1; min-height: 0; overflow: auto; padding: 24px; }
-.demo-panel { min-height: 0; border-left: 1px solid var(--line); }
-.demo-empty { max-width: 420px; margin: 80px auto; text-align: center; color: var(--ink-soft); }
-.demo-empty .display { font-size: 40px; }
-
 @media (max-width: 860px) {
   .hero { grid-template-columns: 1fr; padding-top: 32px; }
   .hero-art { min-height: 0; }
   .hero-art .sheet-stack { height: 300px; }
-  .demo-body { height: auto; overflow: visible; }
-  .demo { grid-template-columns: 1fr; }
-  .demo-pages { max-height: 70vh; padding: 16px; }
-  .demo-panel { border-left: 0; border-top: 1px solid var(--line); height: 640px; }
 }
 
 @media print {
-  .site-head, .site-foot, .demo-bar, .demo-panel { display: none; }
+  .site-head, .site-foot { display: none; }
 }
