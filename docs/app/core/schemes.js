@@ -36,6 +36,15 @@ export const COLOR_SCHEMES = [
 
 export const FONT_SCHEMES = [
   {
+    // The default: headings in a typewriter-like code face, the same one the live demo uses.
+    // Word has no IBM Plex Mono, so it uses Consolas, the closest face that every copy of Word has.
+    id: "typewriter",
+    name: "Typewriter",
+    headingBold: true,
+    heading: { word: "Consolas", google: "IBM Plex Mono", css: "'IBM Plex Mono', Consolas, 'SF Mono', Menlo, monospace" },
+    body: { word: "Arial", google: "Arial", css: "Arial, 'Helvetica Neue', Helvetica, sans-serif" },
+  },
+  {
     id: "editorial",
     name: "Editorial",
     headingBold: true,
@@ -111,6 +120,7 @@ export const GOOGLE_FONT_FAMILIES = [
   "Inter:ital,wght@0,400;0,700;1,400",
   "Libre Baskerville:ital,wght@0,400;0,700;1,400",
   "Source Sans 3:ital,wght@0,400;0,700;1,400",
+  "IBM Plex Mono:ital,wght@0,400;0,500;0,700;1,400",
 ];
 
 export function googleFontsHref() {
@@ -136,6 +146,7 @@ export const WORD_FONT_CHOICES = [
   { name: "Calibri", css: "Calibri, Carlito, sans-serif" },
   { name: "Cambria", css: "Cambria, Caladea, serif" },
   { name: "Century Gothic", css: "'Century Gothic', Montserrat, sans-serif" },
+  { name: "Consolas", css: "Consolas, 'IBM Plex Mono', Menlo, monospace" },
   { name: "Constantia", css: "Constantia, Georgia, serif" },
   { name: "Corbel", css: "Corbel, 'Segoe UI', sans-serif" },
   { name: "Franklin Gothic Medium", css: "'Franklin Gothic Medium', 'Arial Narrow', sans-serif" },
@@ -155,6 +166,7 @@ export const GOOGLE_FONT_CHOICES = [
   { name: "Cormorant Garamond", css: "'Cormorant Garamond', Garamond, serif" },
   { name: "EB Garamond", css: "'EB Garamond', Garamond, serif" },
   { name: "Georgia", css: "Georgia, serif" },
+  { name: "IBM Plex Mono", css: "'IBM Plex Mono', Consolas, monospace" },
   { name: "Inter", css: "Inter, sans-serif" },
   { name: "Lato", css: "Lato, sans-serif" },
   { name: "Libre Baskerville", css: "'Libre Baskerville', serif" },
@@ -186,6 +198,7 @@ export const FONT_EQUIVALENTS = {
     Calibri: "Open Sans",
     Cambria: "Merriweather",
     "Century Gothic": "Montserrat",
+    Consolas: "IBM Plex Mono",
     Constantia: "Lora",
     Corbel: "Source Sans 3",
     "Franklin Gothic Medium": "Oswald",
@@ -204,6 +217,7 @@ export const FONT_EQUIVALENTS = {
     "Cormorant Garamond": "Garamond",
     "EB Garamond": "Garamond",
     Georgia: "Georgia",
+    "IBM Plex Mono": "Consolas",
     Inter: "Aptos",
     Lato: "Gill Sans MT",
     "Libre Baskerville": "Bookman Old Style",

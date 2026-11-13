@@ -92,7 +92,7 @@
 .st-wordmark { font: italic 500 25px/1 var(--display); letter-spacing: 0.005em; }
 .st-doc { display: flex; flex-direction: column; min-width: 0; flex: 0 1 280px; padding-left: 10px; border-left: 1px solid var(--line); }
 .st-title {
-  font: 600 15px/1.2 var(--st-ui);
+  font: 500 14.5px/1.2 var(--st-mono);
   color: var(--ink);
   background: transparent;
   border: 1px solid transparent;
@@ -291,7 +291,9 @@
 .st-side .oz { --oz-ui: var(--st-ui); height: 100%; }
 /* The app bar already has Undo and Redo, so the docked panel keeps only its history list. */
 .st-side .oz-undo, .st-side .oz-redo { display: none; }
-.st-side .oz-title { font-family: var(--st-ui); font-style: normal; font-weight: 600; font-size: 19px; letter-spacing: -0.01em; }
+/* Headings in the demo use the same typewriter-like face as its measurements. */
+.st-side .oz-title { font-family: var(--st-mono); font-style: normal; font-weight: 500; font-size: 18px; letter-spacing: -0.02em; }
+.st-side .oz-h { font-family: var(--st-mono); font-weight: 500; letter-spacing: 0.04em; }
 .st-sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 4px; position: relative; }
 .st-grip { position: absolute; left: 50%; top: 6px; width: 40px; height: 4px; margin-left: -20px; border-radius: 2px; background: var(--line); }
 

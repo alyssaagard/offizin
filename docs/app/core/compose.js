@@ -107,7 +107,7 @@ export const DEFAULT_PRINT = {
 export const DEFAULT_THEME = {
   colorScheme: "ink",
   customColors: null, // { primary, accent, dark } when the user picks their own
-  fontScheme: "editorial",
+  fontScheme: "typewriter",
   customFonts: null, // { heading: { word, google }, body: { word, google }, headingBold } with fontScheme "custom"
   paper: "letter", // "letter" or "a4"
   business: {},

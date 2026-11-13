@@ -295,7 +295,11 @@ export function titleAfterRender(prev, m) {
 export const STUDIO_FONT_FAMILIES = ["IBM Plex Sans:ital,wght@0,400;0,500;0,600;0,700;1,400", "IBM Plex Mono:wght@400;500"];
 
 export function studioFontsHref(base) {
-  const extra = STUDIO_FONT_FAMILIES.map((f) => "family=" + f.replace(/ /g, "+")).join("&");
+  // A family the template fonts already ask for (IBM Plex Mono, for the Typewriter scheme) is
+  // asked for only once, since Google Fonts refuses a family that appears twice.
+  const extra = STUDIO_FONT_FAMILIES.map((f) => "family=" + f.replace(/ /g, "+"))
+    .filter((f) => !base || !base.includes(f.split(":")[0] + ":"))
+    .join("&");
   if (!base) return "https://fonts.googleapis.com/css2?" + extra + "&display=swap";
   const i = base.indexOf("&display=");
   return i < 0 ? base + "&" + extra : base.slice(0, i) + "&" + extra + base.slice(i);

@@ -1,4 +1,29 @@
-/* Offizin website. A light, airy pastel blue palette with deep navy text. */
+/* Offizin website. A light, airy pastel blue palette with deep navy text. Headings use IBM Plex
+   Mono, the typewriter-like face of the live demo; the Offizin wordmark keeps Cormorant. */
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("fonts/ibm-plex-mono-latin-700-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
 
 @font-face {
   font-family: "Offizin Display";
@@ -22,6 +47,7 @@
   --accent-deep: #2e5f8f;
   --focus: #4a86c5;
   --display: "Offizin Display", "Cormorant Garamond", Garamond, Georgia, serif;
+  --heading: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --ui: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --wrap: 1120px;
@@ -54,10 +80,10 @@ a:hover { color: var(--ink); }
 
 /* Type */
 h1, h2, h3 { line-height: 1.15; margin: 0 0 12px; }
-.display { font: italic 500 clamp(40px, 7vw, 72px)/1.02 var(--display); letter-spacing: -0.01em; }
-h1.page-title { font: italic 500 clamp(36px, 6vw, 56px)/1.05 var(--display); margin-top: 40px; }
-h2 { font: italic 500 clamp(28px, 4vw, 38px)/1.1 var(--display); margin-top: 56px; }
-h3 { font-size: 18px; font-weight: 650; margin-top: 28px; }
+.display { font: 500 clamp(32px, 5.4vw, 56px)/1.08 var(--heading); letter-spacing: -0.03em; }
+h1.page-title { font: 500 clamp(30px, 4.8vw, 46px)/1.1 var(--heading); letter-spacing: -0.03em; margin-top: 40px; }
+h2 { font: 500 clamp(23px, 3.2vw, 31px)/1.2 var(--heading); letter-spacing: -0.02em; margin-top: 56px; }
+h3 { font: 500 17px/1.3 var(--heading); letter-spacing: -0.01em; margin-top: 28px; }
 .lead { font-size: clamp(17px, 2.2vw, 20px); color: var(--ink-soft); max-width: 46em; }
 .kicker { font-size: 12.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-deep); margin: 0 0 10px; }
 .muted { color: var(--muted); }

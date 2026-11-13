@@ -97,7 +97,7 @@ export async function run({ ROOT, fail, ok, load }) {
     expect(fileSlug("  Spring Café News!  ") === "spring-cafe-news" && fileSlug("") === "offizin-publication", "file names from titles");
     const { googleFontsHref } = await load("docs/app/core/schemes.js");
     const href = studioFontsHref(googleFontsHref());
-    expect(href.includes("family=IBM+Plex+Sans") && href.includes("family=IBM+Plex+Mono") && href.includes("family=Lato") && href.endsWith("&display=swap") && href.split("display=swap").length === 2, "one Google Fonts request for IBM Plex and the template fonts");
+    expect(href.includes("family=IBM+Plex+Sans") && href.includes("family=IBM+Plex+Mono") && href.includes("family=Lato") && href.endsWith("&display=swap") && href.split("display=swap").length === 2 && href.split("family=IBM+Plex+Mono:").length === 2 && /family=IBM\+Plex\+Mono:[^&]*0,500/.test(href), "one Google Fonts request for IBM Plex and the template fonts");
     const marks = marksSvg(400, 300, 30);
     expect(marks.includes('width="460"') && marks.includes("mk-crop") && (marks.match(/class="mk-reg"/g) || []).length === 4 && !/NaN/.test(marks), "crop marks at the corners and four registration targets");
     expect(currentSheetIndex([{ top: -900, bottom: -100 }, { top: -50, bottom: 700 }, { top: 720, bottom: 1500 }], { top: 0, bottom: 800 }) === 1, "the current page is the one that fills most of the view");
