@@ -24,10 +24,14 @@ export function utf8(text) {
   return new TextEncoder().encode(text);
 }
 
-/** Builds a zip file from [{ name, data }] where data is a string or Uint8Array. */
-export function zip(entries) {
+/**
+ * Builds a zip file from [{ name, data }] where data is a string or Uint8Array.
+ * options.date sets the files' timestamp (the build uses the release date, so packages only
+ * change when their contents do); the default is now.
+ */
+export function zip(entries, options = {}) {
   const files = entries.map((e) => ({ name: utf8(e.name), data: typeof e.data === "string" ? utf8(e.data) : e.data }));
-  const now = new Date();
+  const now = options.date instanceof Date && !Number.isNaN(options.date.getTime()) ? options.date : new Date();
   const time = (now.getHours() << 11) | (now.getMinutes() << 5) | Math.floor(now.getSeconds() / 2);
   const date = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
   const chunks = [];

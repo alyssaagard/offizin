@@ -20,6 +20,6 @@ jobs:
       - name: Build generated files
         run: npm run build
       - name: Generated files are committed and up to date
-        run: git diff --exit-code -- docs/word/manifest.xml docs/google-docs docs/version.json
+        run: git diff --exit-code -- docs/word/manifest.xml docs/google-docs docs/download docs/version.json
       - name: Run checks
         run: npm run check

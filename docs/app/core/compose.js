@@ -17,7 +17,7 @@
  *   model.booklet   booklets only: page count, sheet size, and printer spread order
  *   model.options   the options the publication was composed with
  */
-import { pageSize, round, mix, clamp } from "./util.js";
+import { PAPER, pageSize, round, mix, clamp, contrastRatio } from "./util.js";
 import { palette, fontsFor, findColorScheme, findFontScheme } from "./schemes.js";
 
 export const MODEL_VERSION = 2;
@@ -105,7 +105,7 @@ export const DEFAULT_PRINT = {
 };
 
 export const DEFAULT_THEME = {
-  colorScheme: "harbor",
+  colorScheme: "ink",
   customColors: null, // { primary, accent, dark } when the user picks their own
   fontScheme: "editorial",
   customFonts: null, // { heading: { word, google }, body: { word, google }, headingBold } with fontScheme "custom"
@@ -172,7 +172,9 @@ export function resolvePage(template, paper, options = {}) {
   if (options.margins && allow.margins) {
     const m = normMargins(options.margins);
     // Keep at least two inches of usable space in each direction.
-    const maxSide = Math.max(0, (size.width - 144) / 2);
+    let maxSide = Math.max(0, (size.width - 144) / 2);
+    // A tri-fold also keeps each outer panel at least one inch wide.
+    if (template.fold === "trifold") maxSide = Math.max(0, Math.min(maxSide, size.width / 3 - 72));
     const maxTop = Math.max(0, (size.height - 144) / 2);
     margins = {
       top: round(clamp(m.top, 0, maxTop)),
@@ -200,6 +202,39 @@ export function normalizeRecords(records) {
   });
 }
 
+/** The standard paper size a sheet matches in either orientation (within about 1.5 mm), or null. */
+export function matchPaperSize(width, height) {
+  const near = (a, b) => Math.abs(a - b) < 4.5;
+  for (const [name, p] of Object.entries(PAPER)) {
+    if (near(p.width, width) && near(p.height, height)) return { name, width: p.width, height: p.height };
+    if (near(p.height, width) && near(p.width, height)) return { name, width: p.height, height: p.width };
+  }
+  return null;
+}
+
+/**
+ * The sheet that holds two portrait pages side by side (booklets, and two pages per sheet),
+ * snapped to standard paper: two A5 pages are 296 mm wide, and the sheet is A4 at 297 mm.
+ * Returns { width, height, sizeName } or null for a landscape page.
+ */
+export function twoUpSheet(page) {
+  if (!page || page.width > page.height) return null;
+  const width = round(page.width * 2);
+  const match = matchPaperSize(width, page.height);
+  if (!match) return null;
+  return { width: round(match.width), height: round(match.height), sizeName: match.name };
+}
+
+/** The page size Word stores for a model: the whole sheet for book fold and for two pages per sheet. */
+export function wordSheet(model, bookFold) {
+  if (bookFold && model.booklet) return { width: model.booklet.sheet.width, height: model.booklet.sheet.height };
+  if (model.print && model.print.twoPerSheet && !model.booklet) {
+    const sheet = twoUpSheet(model.page);
+    if (sheet) return { width: sheet.width, height: sheet.height };
+  }
+  return { width: model.page.width, height: model.page.height };
+}
+
 /** Printer spread order for a booklet of n pages (n is a multiple of 4), as [left, right] page indexes. */
 export function bookletSpreads(n) {
   const spreads = [];
@@ -214,6 +249,9 @@ export function bookletSpreads(n) {
 // Composition
 // ---------------------------------------------------------------------------
 
+/** Fill tokens that are always light, so accent text on them uses its darker text tone. */
+const LIGHT_FILLS = new Set(["white", "tint", "accentTint", "line"]);
+
 class Composer {
   constructor(theme, platform, layout) {
     this.theme = { ...DEFAULT_THEME, ...theme };
@@ -227,6 +265,22 @@ class Composer {
     this.missingInfo = missing;
     this.samples = new Set();
     this.vars = {};
+    // The fill tokens of the cells being composed, innermost last, so text can pick a readable tone.
+    this.backgrounds = [];
+    // A template's own look for some roles (see template.styles in compose()).
+    this.styleOverrides = {};
+  }
+
+  /**
+   * The color for text. Text in the accent color uses the accent's darker text tone on paper and
+   * light fills, and the accent itself on other fills. The choice goes by the fill's token, not
+   * its value, so a publication restyled to another scheme matches one made in that scheme.
+   */
+  textColor(token, fallback) {
+    if ((token || fallback) !== "accent") return this.color(token, fallback);
+    const fill = this.backgrounds[this.backgrounds.length - 1];
+    const light = fill === undefined || (typeof fill === "string" && !fill.startsWith("#") ? LIGHT_FILLS.has(fill) : contrastRatio(this.color(fill), "#FFFFFF") < 2);
+    return this.color(light ? "accentText" : "accent");
   }
 
   color(token, fallback = "dark") {
@@ -255,11 +309,23 @@ class Composer {
     });
   }
 
-  recordSample(raw, block) {
+  /**
+   * Remembers sample text, so the design checker can find what is still unreplaced. Short text
+   * is skipped unless it is known to be a sample: marked { sample: true }, marked { fixed: false }
+   * (the sample records in mail merge templates), or a placeholder such as "Job title".
+   */
+  recordSample(raw, block, caps) {
     if (block.fixed) return;
     if (/\{\w+\}/.test(raw)) return;
-    const clean = raw.replace(/\*\*/g, "").replace(/\s+/g, " ").trim();
-    if (clean.length < 12 || !/[a-z]/i.test(clean)) return;
+    // Search one line at a time and stop at a tab, since neither is a space in the editors.
+    const firstLine = String(raw).split("\n")[0].split("\t")[0];
+    // Keep double spaces: the editors keep them, so the search has to as well.
+    let clean = firstLine.replace(/\*\*/g, "").trim();
+    if (!/[a-z]/i.test(clean)) return;
+    const known = block.sample === true || block.fixed === false || /\S\s+(name|title)$/i.test(clean);
+    if (clean.length < (known ? 3 : 12)) return;
+    // Text styled in capitals is written in capitals, and the editors search with matching case.
+    if (caps) clean = clean.toUpperCase();
     // The checker searches for the start of each sample, which keeps searches short and reliable.
     this.samples.add(clean.slice(0, 48).trim());
   }
@@ -293,7 +359,7 @@ class Composer {
       font: font.name,
       css: font.css,
       size: this.size(role.size),
-      color: this.color(role.color),
+      color: this.textColor(role.color),
       bold: role.bold ? (isHeading ? this.fonts.headingBold : true) : false,
       italic: !!role.italic,
       caps,
@@ -301,7 +367,24 @@ class Composer {
       line: round(role.line * this.layout.lineScale, 3),
       before: 0,
       after: this.space(role.after),
+      ...this.overrideFor(roleName),
     };
+  }
+
+  /**
+   * A template's own size, color, and spacing for a role, scaled the same way as paragraphs, so
+   * paragraphs that use it match their style exactly and carry no direct formatting in Word.
+   */
+  overrideFor(roleName) {
+    const o = this.styleOverrides[roleName];
+    if (!o) return {};
+    const out = {};
+    if (o.size !== undefined) out.size = this.size(o.size);
+    if (o.color !== undefined) out.color = this.textColor(o.color);
+    if (o.before !== undefined) out.before = this.space(o.before);
+    if (o.after !== undefined) out.after = this.space(o.after);
+    if (o.line !== undefined) out.line = round(Math.max(0.8, o.line * this.layout.lineScale), 3);
+    return out;
   }
 
   styles() {
@@ -318,8 +401,8 @@ class Composer {
     const isHeading = fontKey === "heading";
     const bold = b.bold ?? (role.bold ? (isHeading ? this.fonts.headingBold : true) : false);
     const raw = b.text ?? "";
-    this.recordSample(raw, b);
     const caps = b.caps ?? role.caps ?? false;
+    this.recordSample(raw, b, caps);
     const p = {
       t: "p",
       style: roleName,
@@ -327,7 +410,7 @@ class Composer {
       font: font.name,
       css: font.css,
       size: this.size(b.size ?? role.size),
-      color: this.color(b.color, role.color),
+      color: this.textColor(b.color, role.color),
       bold,
       italic: b.italic ?? role.italic ?? false,
       align: b.align || "left",
@@ -335,6 +418,7 @@ class Composer {
       after: this.space(b.after ?? role.after),
       line: round(Math.max(0.8, (b.line ?? role.line) * this.layout.lineScale), 3),
       tracking: b.tracking ?? (caps ? 0.08 : 0),
+      caps: !!caps,
       ...extra,
     };
     if (b.indent) p.indent = { left: Number(b.indent.left) || 0, hanging: Number(b.indent.hanging) || 0 };
@@ -423,8 +507,9 @@ class Composer {
     return {
       t: "image",
       kind: b.kind || "photo",
-      width: round(w),
-      height: round(h),
+      // Never a zero or negative size, which Word cannot open and Google Docs refuses.
+      width: Math.max(1, round(w)),
+      height: Math.max(1, round(h)),
       align: b.align || "left",
       label: logo ? "" : this.fill(b.label || (b.kind === "logo" ? "Your logo" : "Your picture")),
       fill: this.color(b.fill || "tint"),
@@ -500,6 +585,8 @@ class Composer {
       cols = b.widths.map((f) => (f / sum) * avail);
     }
     cols = cols.map((c) => round(c));
+    // Stop with a plain message, before anything reaches the document, if margins leave no room.
+    if (cols.some((c) => !(c > 0))) throw new Error("This layout does not fit the page with these margins. Make the margins smaller under Customize, then try again.");
     const rows = b.rows.map((r) => {
       const row = Array.isArray(r) ? { cells: r } : r;
       const cells = [];
@@ -507,13 +594,10 @@ class Composer {
         const raw = typeof (c.pad ?? 0) === "number" ? Array(4).fill(c.pad ?? 0) : c.pad;
         const pad = raw.map((v) => round(v * this.layout.padScale, 1));
         const inner = Math.max(12, cols[i] - pad[1] - pad[3]);
-        cells.push({
-          fill: c.fill ? this.color(c.fill) : null,
-          pad,
-          valign: c.valign || "top",
-          border: this.cellBorder(c.border ?? b.border),
-          blocks: this.blocks(c.blocks || [], inner),
-        });
+        if (c.fill) this.backgrounds.push(c.fill);
+        const blocks = this.blocks(c.blocks || [], inner);
+        if (c.fill) this.backgrounds.pop();
+        cells.push({ fill: c.fill ? this.color(c.fill) : null, pad, valign: c.valign || "top", border: this.cellBorder(c.border ?? b.border), blocks });
         if (gap && i < row.cells.length - 1) cells.push({ fill: null, pad: [0, 0, 0, 0], valign: "top", border: null, blocks: [], spacer: true });
       });
       return { height: row.height ? round(row.height) : null, exact: !!row.exact, cells };
@@ -634,7 +718,11 @@ function resolveOptions(template, options) {
   for (const o of template.options || []) {
     const fallback = typeof o.default === "function" ? o.default() : o.default;
     let v = options[o.key] ?? fallback;
-    if (o.type === "number") v = Number.isFinite(Number(v)) ? Number(v) : fallback;
+    if (o.type === "number") {
+      v = Number.isFinite(Number(v)) ? Number(v) : fallback;
+      if (Number.isFinite(o.min)) v = Math.max(o.min, v);
+      if (Number.isFinite(o.max)) v = Math.min(o.max, v);
+    }
     if (o.type === "boolean") v = v === true || v === "true";
     if (o.type === "select" && o.choices && !o.choices.some((c) => c.value === v)) v = fallback;
     opts[o.key] = v;
@@ -665,6 +753,8 @@ export function compose(template, theme, platform, options = {}) {
   const opts = resolveOptions(template, options);
   const records = normalizeRecords(options.records && options.records.length ? options.records : (template.merge && template.merge.sample) || []);
   const ctx = makeContext(composer, page, { ...opts, records: options.records || null }, template, records);
+  // A template can give some roles its own look, so its paragraphs follow Word and Google Docs styles.
+  if (template.styles) composer.styleOverrides = (typeof template.styles === "function" ? template.styles(ctx) : template.styles) || {};
   const raw = template.build(ctx);
 
   const printSpec = typeof template.print === "function" ? template.print(ctx) : template.print;
@@ -678,15 +768,16 @@ export function compose(template, theme, platform, options = {}) {
     // Booklets: pages in reading order, padded to a multiple of four.
     pages = raw.pages.map((pg) => composer.blocks(pg, ctx.W));
     while (pages.length % 4) pages.splice(pages.length - 1, 0, []);
+    const sheet = twoUpSheet(page) || { width: round(page.width * 2), height: page.height };
     booklet = {
       pages: pages.length,
-      sheet: { width: round(page.width * 2), height: page.height },
+      sheet: { width: sheet.width, height: sheet.height },
       spreads: bookletSpreads(pages.length),
     };
     if (platform === "google") {
       // Google Docs has no booklet printing, so Offizin lays out the printer spreads itself.
       const m = page.margins;
-      modelPage = { width: round(page.width * 2), height: page.height, orientation: "landscape", margins: { ...m }, sizeName: null };
+      modelPage = { width: sheet.width, height: sheet.height, orientation: "landscape", margins: { ...m }, sizeName: (twoUpSheet(page) || {}).sizeName || null };
       const rowH = round(page.height - m.top - m.bottom - 10);
       blocks = [];
       booklet.spreads.forEach(([l, r], i) => {
@@ -721,6 +812,8 @@ export function compose(template, theme, platform, options = {}) {
   } else {
     blocks = composer.blocks(raw, ctx.W);
   }
+  // Two pages per sheet needs a small portrait page that fits twice on standard paper.
+  if (print.twoPerSheet && (booklet || !twoUpSheet(modelPage))) print.twoPerSheet = false;
 
   return {
     version: MODEL_VERSION,

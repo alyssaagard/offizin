@@ -47,8 +47,8 @@
       </div>
     </section>
 
-    <h2>Eighteen publications, ready in seconds</h2>
-    <p class="lead">Every template adapts to Letter or A4 paper and to the colors, fonts, and information you set once. Click one to open it in the live demo.</p>
+    <h2><span id="template-count">Dozens of</span> publications, ready in seconds</h2>
+    <p class="lead">Every template adapts to your paper, colors, fonts, and business information, and every one can be customized: paper size, margins, padding, spacing, and text size. Click one to open it in the live demo.</p>
     <div class="gallery" id="gallery"></div>
 
     <h2>Everything Publisher users reach for</h2>
@@ -56,17 +56,17 @@
       <div class="card">
         <img class="feature-icon" src="assets/icons/ribbon-create-80.png" alt="">
         <h3>Publication gallery</h3>
-        <p>Tri-fold and bi-fold brochures, newsletters, flyers, posters, signs, business cards, postcards, greeting cards, invitations, programs, menus, letterhead, labels, calendars, certificates, and a resume.</p>
+        <p>Brochures, newsletters, booklets, flyers, posters, signs, business cards, postcards, greeting cards, invitations, programs, menus, letterhead, envelopes, labels, name badges, tickets, gift certificates, calendars, certificates, resumes, and CVs.</p>
       </div>
       <div class="card">
         <img class="feature-icon" src="assets/icons/ribbon-design-80.png" alt="">
         <h3>Color and font schemes</h3>
-        <p>Twelve color schemes and eight font pairings, or your own brand colors. Change the scheme later and the whole publication follows, with your text kept.</p>
+        <p>Black and white by default, with twelve more color schemes and eight font pairings, or your own colors and fonts. Change the scheme later and every color and font in the publication switches exactly, with your text kept.</p>
       </div>
       <div class="card">
         <img class="feature-icon" src="assets/icons/ribbon-info-80.png" alt="">
         <h3>Business information</h3>
-        <p>Enter your name, organization, address, phone, website, and logo once. Every card, letterhead, and brochure fills them in. Keep separate sets for work, a club, or home.</p>
+        <p>Enter your name, organization, address, phone, website, and logo once. Every card, letterhead, and brochure fills them in. Keep separate sets for work, a club, or home. In Google Docs, save a brand kit once and open it in each new document.</p>
       </div>
       <div class="card">
         <img class="feature-icon" src="assets/icons/ribbon-insert-80.png" alt="">
@@ -81,7 +81,27 @@
       <div class="card">
         <img class="feature-icon" src="assets/icons/icon-80.png" alt="">
         <h3>Print and fold guides</h3>
-        <p>Fold lines on screen, never on paper. Step by step help for tri-folds, half-folds, cards, and labels, plus picture placeholders you swap with one right-click.</p>
+        <p>Fold lines on screen, never on paper. Booklet printing, mirror margins, and two pages per sheet are saved in Word documents where Word allows it (Microsoft 365 Word 2507 or later on Windows, 16.99.2 or later on Mac, or a file made with Open in a new document), and every publication shows the exact print settings to choose.</p>
+      </div>
+      <div class="card">
+        <h3>Mail merge</h3>
+        <p>Paste a list from Excel or Google Sheets and print one address label, name badge, certificate, envelope, or ticket per person, on as many sheets as it takes.</p>
+      </div>
+      <div class="card">
+        <h3>Customize everything</h3>
+        <p>Paper size, orientation, margins, padding inside panels, gaps between columns, text size, line spacing, and paragraph spacing, with a live preview. Set your own defaults once.</p>
+      </div>
+      <div class="card">
+        <h3>Its own Undo</h3>
+        <p>Offizin keeps a history of what it did, so you can undo a page part or a new design without losing the typing you did in Word or Google Docs.</p>
+      </div>
+      <div class="card">
+        <h3>Resumes screening software can read</h3>
+        <p>Plain, single column resumes with standard headings and no tables or text boxes, for online applications, plus academic and European style CVs.</p>
+      </div>
+      <div class="card">
+        <h3>Native to your editor</h3>
+        <p>Real Title and Heading styles, real bullets, and real flowing columns in Word, so the Styles pane, Navigation pane, and screen readers understand every publication.</p>
       </div>
     </div>
 
@@ -109,11 +129,11 @@
     </div>
 
     <h2>What Offizin does differently from Publisher</h2>
-    <p class="lead">Offizin builds publications from tables and pictures that Word and Google Docs understand everywhere, including on the web. That keeps documents easy to edit and share. A few things work differently:</p>
+    <p class="lead">Offizin builds publications from styles, tables, and pictures that Word and Google Docs understand everywhere, including on the web. That keeps documents easy to edit, share, and print. A few things work differently:</p>
     <ul>
-      <li>Panels and columns are fixed table cells rather than free-floating text boxes, so they never drift when someone edits the text.</li>
-      <li>Text does not flow from one box to the next. The design checker and the demo point out text that runs past the page.</li>
-      <li>For mail merge, use the mail merge built into Word, or an add-on for Google Docs.</li>
+      <li>Panels are fixed table cells rather than free-floating text boxes, so they never drift when someone edits the text.</li>
+      <li>In Word, text flows between columns natively. Google Docs balances columns when the publication is made, because it cannot flow text through add-ons.</li>
+      <li>Your work stays a normal Word or Google document, so anyone can open and edit it without Offizin.</li>
     </ul>
   </main>
 
@@ -138,23 +158,24 @@
     const fit = (box, model, w, h) => renderPreview(box, model, { scale: Math.min(w / (model.page.width * PX), h / (model.page.height * PX)) * 0.94, pages: 1, guides: false, checkOverflow: false });
 
     const gallery = document.getElementById("gallery");
+    document.getElementById("template-count").textContent = String(TEMPLATES.length);
     for (const t of TEMPLATES) {
       const a = document.createElement("a");
       a.className = "tile";
       a.href = "demo/#template=" + t.id;
-      a.innerHTML = `<span class="tile-art"></span><b></b><span></span>`;
+      a.innerHTML = `<span class="tile-art" aria-hidden="true"></span><b></b><span></span>`;
       a.querySelector("b").textContent = t.name;
       a.querySelector("span:last-child").textContent = t.sizeLabel;
       gallery.appendChild(a);
-      const model = compose(t, { colorScheme: "harbor", fontScheme: "editorial", paper: "letter" }, "web");
+      const model = compose(t, { colorScheme: "ink", fontScheme: "editorial", paper: "letter" }, "web");
       requestAnimationFrame(() => fit(a.querySelector(".tile-art"), model, 150, 140));
     }
 
     const stack = document.getElementById("hero-stack");
     const hero = [
-      ["trifold", "cobalt", { left: "0%", top: "22%", transform: "rotate(-4deg)" }, 330],
-      ["event-flyer", "lagoon", { left: "44%", top: "0%", transform: "rotate(3deg)" }, 200],
-      ["business-cards", "harbor", { left: "30%", top: "44%", transform: "rotate(-1deg)" }, 180],
+      ["trifold", "ink", { left: "0%", top: "22%", transform: "rotate(-4deg)" }, 330],
+      ["event-flyer", "graphite", { left: "44%", top: "0%", transform: "rotate(3deg)" }, 200],
+      ["business-cards", "ink", { left: "30%", top: "44%", transform: "rotate(-1deg)" }, 180],
     ];
     for (const [id, scheme, pos, width] of hero) {
       const holder = document.createElement("div");

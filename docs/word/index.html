@@ -44,8 +44,12 @@
     <h2>Step 1: Download the manifest</h2>
     <p>Word add-ins install from a small file called a manifest. It tells Word where Offizin lives and which buttons to add. It contains no program code of its own.</p>
     <div class="file-row">
-      <span class="grow"><code>offizin-manifest.xml</code><br><span class="small muted">The address inside it is <span id="manifest-url">https://offizin.alyssaagard.dev/word/manifest.xml</span></span></span>
+      <span class="grow"><code>offizin-manifest.xml</code><br><span class="small muted">It is also published at <span id="manifest-url">https://offizin.alyssaagard.dev/word/manifest.xml</span>, the link IT teams use in the Microsoft 365 admin center.</span></span>
       <a class="btn btn-primary" href="manifest.xml" download="offizin-manifest.xml">Download manifest</a>
+    </div>
+    <div class="file-row">
+      <span class="grow"><code>offizin-word.zip</code><br><span class="small muted">The package: the same manifest plus these steps in a text file, handy for sharing or for an IT team. Unzip it, then give Word the manifest inside; Word's upload box takes the manifest file, not the zip.</span></span>
+      <a class="btn" href="../download/offizin-word.zip" download>Download package</a>
     </div>
 
     <h2>Step 2: Add it to Word</h2>
@@ -97,9 +101,9 @@ cp ~/Downloads/offizin-manifest.xml ~/Library/Containers/com.microsoft.Word/Data
       <ol class="steps">
         <li>Open the <a href="https://admin.microsoft.com">Microsoft 365 admin center</a> and go to <strong>Settings</strong>, then <strong>Integrated apps</strong>.</li>
         <li>Select <strong>Upload custom apps</strong>. For the app type, choose <strong>Office Add-in</strong>.</li>
-        <li>Choose <strong>Provide link to the manifest file</strong>, paste <code id="org-url">https://offizin.alyssaagard.dev/word/manifest.xml</code>, and select <strong>Validate</strong>.</li>
-        <li>Choose who gets Offizin: <strong>Just me</strong> to try it, <strong>Specific users/groups</strong>, or the <strong>Entire organization</strong>. Then select <strong>Deploy</strong>.</li>
-        <li>Offizin appears in Word on the web, Windows, and Mac for those people, usually within a few hours and always within 24 hours.</li>
+        <li>Choose <strong>Provide link to the manifest file</strong>, paste <code id="org-url">https://offizin.alyssaagard.dev/word/manifest.xml</code>, and select <strong>Validate</strong>. Or choose the option to upload the manifest file, select <strong>Choose File</strong>, and pick <code>offizin-manifest.xml</code> from the package.</li>
+        <li>Choose who gets Offizin: <strong>Just me</strong> to try it, <strong>Specific users/groups</strong>, or the <strong>Entire organization</strong>. Select <strong>Next</strong>, accept the permission request if Microsoft asks, select <strong>Next</strong> again, and then select <strong>Finish deployment</strong>.</li>
+        <li>Offizin usually appears in Word on the web, Windows, and Mac for those people within a day, but Microsoft says it can take up to 72 hours, and people may need to restart Word.</li>
       </ol>
       <div class="callout"><strong>For IT reviews</strong>Offizin is a task pane add-in with Read/Write Document permission. Its files are static pages served from <span id="org-host">offizin.alyssaagard.dev</span> (GitHub Pages). It has no server, no account, no telemetry, and it makes no network calls with document content. Source code: <a href="https://github.com/alyssaagard/offizin">github.com/alyssaagard/offizin</a>.</div>
     </section>
@@ -117,6 +121,13 @@ cp ~/Downloads/offizin-manifest.xml ~/Library/Containers/com.microsoft.Word/Data
         </tbody>
       </table>
     </div>
+
+    <h2>Undo, print settings, and Word's own styles</h2>
+    <ul>
+      <li><strong>Offizin's own Undo and Redo.</strong> The arrows at the top of the Offizin panel undo only what Offizin did: a publication, a page part, a design, or a page setup change. Your typing and Word's own Undo are left alone. Undoing a page part removes it, and Redo puts it back with whatever you typed into it. Undoing a design puts the previous colors and fonts back. The history icon lists every Offizin change, so you can step back to any point. The history lasts while the panel is open.</li>
+      <li><strong>Print settings kept in the document.</strong> Book fold for booklets, mirror margins, and two pages per sheet are set automatically in Microsoft 365 Word version 2507 or later on Windows and 16.99.2 or later on Mac, and in a file made with <strong>Open in a new document</strong>, which also keeps its fonts. In Word on the web, in Word 2019, 2021, and 2024, and in older Microsoft 365 versions, <strong>Replace this document</strong> cannot set them, so set them yourself: choose <strong>Layout</strong>, <strong>Margins</strong>, <strong>Custom Margins</strong>, then under <strong>Multiple pages</strong> pick <strong>Book fold</strong>, <strong>Mirror margins</strong>, or <strong>2 pages per sheet</strong>, and for a booklet also set the paper size to Letter or A4. Word does not let add-ins choose two-sided printing or the scale, so the Check tab lists those steps for your version of Word.</li>
+      <li><strong>Word's own styles.</strong> Publications use Title, Heading 1, Heading 2, and Normal, so the Styles pane, the Navigation pane, and screen readers understand them. The plain resumes and CVs take their name and heading look from Title, Heading 1, and Heading 2, so changing those styles changes every matching line. In other designs, fonts follow the styles, but some sizes and colors a design sets on purpose stay as they are.</li>
+    </ul>
 
     <h2>Updates and removal</h2>
     <p>Offizin updates itself: Word loads the latest version from this website each time you open it, so there is nothing to reinstall. To remove it, open <strong>Home</strong>, <strong>Add-ins</strong>, then <strong>My Add-ins</strong> (Word on the web and Windows) and choose <strong>Remove</strong>. On a Mac, delete the manifest from the <code>wef</code> folder.</p>

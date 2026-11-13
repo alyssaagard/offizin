@@ -6,12 +6,16 @@
  * Text can use business information fields such as {org} and {phone}, which the composer
  * fills from the user's business information (or friendly samples until it is filled in).
  * "**bold**" marks bold words inside a paragraph.
+ * Running sample text (paragraphs, captions, quotes, bullets) is Middle High German filler from
+ * filler.js. Headings stay short plain English, and names, dates, prices, and contact details
+ * stay plain placeholders.
  *
  * Sizes are in points (72 points = 1 inch). ctx.W and ctx.H are the usable width and height
  * of the page inside its margins. See compose.js for everything the composer accepts.
  */
 import { inch, mm, round, MONTHS, WEEKDAYS } from "./util.js";
 import { p, list, rule, space, pageBreak, pic, logoBox, band, grid, cell, table, columns, scope, detail, contactLines, brandMark, panelFolds, panelPad, PANEL_PAD, sheetMargins, CUT_GUIDE, chunk } from "./dsl.js";
+import { alt, altShort, altList, altQuote } from "./filler.js";
 import { RESUME_TEMPLATES } from "./templates/resumes.js";
 import { MORE_TEMPLATES, MORE_FOLD_GUIDES } from "./templates/more.js";
 
@@ -37,15 +41,16 @@ const FLAT_SIZES = ["letter", "legal", "tabloid", "halfLetter", "a3", "a4", "a5"
 /** One certificate page, for a merge record or for the sample recipient. */
 function certificatePage(ctx, r) {
   const recipient = r && r.recipient ? r.recipient : "Recipient Name";
-  const reason = r && r.reason ? r.reason : "in recognition of outstanding dedication, leadership, and service during the past year.";
+  // A pasted list without a reason column leaves that line blank, as the merge status says.
+  const reason = r ? r.reason || "" : alt(1, 6);
   const date = r && r.date ? r.date : "Date";
       const inner = [
         p("{org}", "kicker", { align: "center", after: 14 }),
         p("Certificate of Achievement", "title", { align: "center", size: 34 }),
         rule({ color: "accent", weight: 1.5, width: 80, align: "center", before: 4, after: 16 }),
-        p("This certificate is proudly presented to", "body", { align: "center", italic: true, color: "muted", after: 10 }),
-        p(recipient, "display", { align: "center", size: 40, color: "accent", italic: true, after: 12, fixed: !!(r && r.recipient) }),
-        p(reason, "body", { align: "center", size: 12, after: 30, fixed: !!(r && r.reason) }),
+        p("Presented to", "body", { align: "center", italic: true, color: "muted", after: 10 }),
+        p(recipient, "display", { align: "center", size: 40, color: "accent", italic: true, after: reason ? 12 : 42, fixed: !!(r && r.recipient) }),
+        reason ? p(reason, "body", { align: "center", size: 12, after: 30, fixed: !!(r && r.reason) }) : null,
         grid(
           [1, 0.3, 1],
           [
@@ -103,21 +108,21 @@ const CORE_TEMPLATES = [
                 [
                   p("Inside this brochure", "kicker"),
                   p("Why it matters", "h1"),
-                  p("Open with the single most important reason a reader should care. This panel is the first thing people see when they unfold the brochure."),
-                  p("“The best sentence a happy client ever said about your work goes here.”", "quote", { size: 13, before: 6 }),
+                  p(alt(1, 0)),
+                  p(`“${altQuote(0)}”`, "quote", { size: 13, before: 6 }),
                   p("Name of the person quoted", "caption", { after: 12 }),
-                  list(["A quick fact that builds trust", "A number that shows your impact", "A promise you always keep"]),
+                  list(altList(3, 0)),
                 ],
                 { pad: panelPad(0, 3) }
               ),
               cell(
                 [
-                  brandMark(ctx, 120, 60, { align: "center" }),
-                  p("{org}", "h2", { align: "center", after: 2 }),
+                  brandMark(ctx, 120, 60, { align: "center", after: ctx.hasLogo ? 8 : 2 }),
+                  ctx.hasLogo ? p("{org}", "h2", { align: "center", after: 2 }) : null,
                   p("{tagline}", "caption", { align: "center", after: 14 }),
                   ...contactLines({ align: "center" }),
                   space(18),
-                  p("Mail or hand this side to your reader.", "caption", { align: "center" }),
+                  p(altShort(3), "caption", { align: "center" }),
                 ],
                 { pad: panelPad(1, 3), valign: "bottom" }
               ),
@@ -126,7 +131,7 @@ const CORE_TEMPLATES = [
                   p("{tagline}", "kicker", { color: "onPrimary", align: "center" }),
                   p("{org}", "title", { color: "onPrimary", align: "center", size: 26 }),
                   rule({ color: "accent", weight: 2, width: 60, align: "center", before: 2, after: 12 }),
-                  p("A clear promise in one short line", "lead", { color: "onPrimary", align: "center" }),
+                  p(altShort(10), "lead", { color: "onPrimary", align: "center" }),
                   pic("full", 150, { fill: { mix: ["primary", "white", 0.25] }, ink: "onPrimary", before: 8, after: 12, align: "center" }),
                   p("{web}", "small", { color: "onPrimary", align: "center" }),
                 ],
@@ -147,10 +152,10 @@ const CORE_TEMPLATES = [
                 [
                   p("About us", "kicker"),
                   p("Who we are", "h1"),
-                  p("Tell your story in two or three short paragraphs. Say who you serve, what you believe, and what makes your approach different."),
-                  p("Keep sentences short and concrete. Readers skim brochures, so lead each paragraph with its point."),
+                  p(alt(1, 1)),
+                  p(alt(1, 8)),
                   pic("full", 110, { before: 4 }),
-                  p("A caption that explains the picture", "caption"),
+                  p(altShort(5), "caption"),
                 ],
                 { pad: panelPad(0, 3) }
               ),
@@ -158,12 +163,12 @@ const CORE_TEMPLATES = [
                 [
                   p("What we do", "kicker"),
                   p("Programs and services", "h1"),
-                  p("First program", "h2"),
-                  p("Describe what it is, who it is for, and the result people can expect."),
-                  p("Second program", "h2"),
-                  p("Explain the value in plain words. One or two sentences is plenty."),
-                  p("Third program", "h2"),
-                  p("Close with something that invites the reader to take part."),
+                  p("Program name", "h2"),
+                  p(alt(1, 2)),
+                  p("Program name", "h2"),
+                  p(alt(1, 10)),
+                  p("Program name", "h2"),
+                  p(alt(1, 12)),
                 ],
                 { pad: panelPad(1, 3) }
               ),
@@ -171,7 +176,7 @@ const CORE_TEMPLATES = [
                 [
                   p("Get involved", "kicker"),
                   p("Join us", "h1"),
-                  list(["Volunteer an afternoon a month", "Become a member or sponsor", "Bring a friend to our next event"]),
+                  list(altList(3, 6)),
                   space(6),
                   band([p("Visit {web}", "button", { align: "center" })], { fill: "accent", pad: 9 }),
                   space(10),
@@ -222,8 +227,8 @@ const CORE_TEMPLATES = [
                   [
                     pic("full", 210, { fill: { mix: ["primary", "white", 0.25] }, ink: "onPrimary", after: 18 }),
                     p("{org}", "kicker", { color: "onPrimary" }),
-                    p("A brochure title that makes people curious", "title", { color: "onPrimary", size: 26 }),
-                    p("A subtitle that says what readers will learn inside", "lead", { color: "onPrimary" }),
+                    p("Brochure title", "title", { color: "onPrimary", size: 26 }),
+                    p(altShort(1), "lead", { color: "onPrimary" }),
                   ],
                   { pad: [28, 28, 28, 28], fill: "primary", valign: "middle" }
                 ),
@@ -242,10 +247,10 @@ const CORE_TEMPLATES = [
                 cell(
                   [
                     p("Our mission", "kicker"),
-                    p("The work we do and why we do it", "headline"),
-                    p("Use this page to explain the problem you solve and the approach you take. A bi-fold gives you room for a little more depth than a flyer.", "lead"),
-                    p("Add a second paragraph with a short story or a result. Specific details make a brochure believable."),
-                    p("“A short quote from someone you have helped.”", "quote", { before: 8 }),
+                    p("Why we do it", "headline"),
+                    p(alt(2, 0), "lead"),
+                    p(alt(1, 9)),
+                    p(`“${altQuote(1)}”`, "quote", { before: 8 }),
                     p("Name, how they know you", "caption"),
                   ],
                   { pad: panelPad(0, 2) }
@@ -258,12 +263,12 @@ const CORE_TEMPLATES = [
                       [1, 1],
                       [
                         [
-                          cell([p("First offer", "h2"), p("One or two sentences about it.", "small")], { pad: [0, 8, 6, 0] }),
-                          cell([p("Second offer", "h2"), p("One or two sentences about it.", "small")], { pad: [0, 0, 6, 8] }),
+                          cell([p("Service name", "h2"), p(alt(1, 5), "small")], { pad: [0, 8, 6, 0] }),
+                          cell([p("Service name", "h2"), p(alt(1, 7), "small")], { pad: [0, 0, 6, 8] }),
                         ],
                         [
-                          cell([p("Third offer", "h2"), p("One or two sentences about it.", "small")], { pad: [0, 8, 0, 0] }),
-                          cell([p("Fourth offer", "h2"), p("One or two sentences about it.", "small")], { pad: [0, 0, 0, 8] }),
+                          cell([p("Service name", "h2"), p(alt(1, 10), "small")], { pad: [0, 8, 0, 0] }),
+                          cell([p("Service name", "h2"), p(alt(1, 11), "small")], { pad: [0, 0, 0, 8] }),
                         ],
                       ]
                     ),
@@ -312,25 +317,25 @@ const CORE_TEMPLATES = [
             [
               cell([
                 p("Lead story", "kicker"),
-                p("A headline that tells readers the news in eight words or fewer", "headline"),
+                p("Story headline", "headline"),
                 p("By the author's name", "caption", { after: 8 }),
                 pic("full", 170, { after: 4 }),
-                p("A caption that adds a fact the picture cannot show", "caption", { after: 8 }),
-                p("Start with the most important news. Who, what, when, and why should all appear in the first two sentences, because many readers stop there."),
-                p("Then add details in order of importance: a quote, a number, a next step. Short paragraphs look friendlier in narrow columns."),
-                p("End with what readers can do, such as signing up, attending, or replying with their ideas."),
+                p(altShort(7), "caption", { after: 8 }),
+                p(alt(2, 0)),
+                p(alt(1, 9)),
+                p(alt(1, 2)),
               ]),
               cell(
                 [
                   p("In this issue", "h2", { color: "primary" }),
-                  list(["Lead story", "Member spotlight", "Upcoming dates", "A note from the director"], { role: "small", gap: 2 }),
+                  list(["Lead story", "Member spotlight", "Upcoming dates", "From the director"], { role: "small", gap: 2 }),
                   rule({ color: "line", before: 6, after: 8 }),
                   p("Upcoming", "h2", { color: "primary" }),
-                  p("**June 14**  Summer concert", "small"),
-                  p("**July 2**  Volunteer training", "small"),
-                  p("**July 19**  Open studio day", "small", { after: 8 }),
+                  p("**June 14**  Event name", "small"),
+                  p("**July 2**  Event name", "small"),
+                  p("**July 19**  Event name", "small", { after: 8 }),
                   rule({ color: "line", before: 0, after: 8 }),
-                  p("“A memorable line from this issue, pulled out to catch the eye.”", "quote", { size: 13 }),
+                  p(`“${altQuote(3)}”`, "quote", { size: 13 }),
                 ],
                 { fill: "tint", pad: 12 }
               ),
@@ -344,16 +349,16 @@ const CORE_TEMPLATES = [
           2,
           [
             p("Member spotlight", "kicker"),
-            p("Meet someone who makes it happen", "h1"),
+            p("Meet a member", "h1"),
             pic("full", 130, { after: 8 }),
-            p("Profile a member, volunteer, or client. Ask three questions and share the best answers in their own words."),
-            p("A short profile builds community and gives readers a reason to open the next issue."),
+            p(alt(1, 4)),
+            p(alt(1, 8)),
             p("From the director", "kicker", { before: 8 }),
-            p("A note on the season ahead", "h1"),
-            p("Use this column for a personal message. Thank people, name what is changing, and say what you hope to accomplish together."),
-            p("Keep it warm and specific. Mention one achievement and one challenge, and invite readers to help with the challenge."),
-            p("Your name", "h2", { before: 6, after: 0 }),
-            p("Your title", "caption"),
+            p("The season ahead", "h1"),
+            p(alt(1, 6)),
+            p(alt(1, 12)),
+            p("{name}", "h2", { before: 6, after: 0 }),
+            p("{title}", "caption"),
           ],
           { gap: 18, rule: true }
         ),
@@ -362,7 +367,7 @@ const CORE_TEMPLATES = [
           [0.5, 0.5],
           [
             [
-              cell([p("Save the date", "h2", { color: "primary" }), table(null, [["June 14", "Summer concert"], ["July 2", "Volunteer training"], ["July 19", "Open studio day"]], { widths: [0.35, 0.65], firstBold: true, firstColor: "primary" })], { pad: [0, 9, 0, 0] }),
+              cell([p("Save the date", "h2", { color: "primary" }), table(null, [["June 14", "Event name"], ["July 2", "Event name"], ["July 19", "Event name"]], { widths: [0.35, 0.65], firstBold: true, firstColor: "primary" })], { pad: [0, 9, 0, 0] }),
               cell([p("Get in touch", "h2", { color: "primary" }), ...contactLines()], { pad: [0, 0, 0, 9] }),
             ],
           ]
@@ -386,15 +391,15 @@ const CORE_TEMPLATES = [
       return [
         pic("full", round(ctx.H * 0.36), { after: 16 }),
         p("{org} presents", "kicker", { align: "center" }),
-        p("Summer Concert Night", "display", { align: "center" }),
-        p("Live music, local food, and a sky full of stars", "lead", { align: "center", after: 16 }),
+        p("Event name", "display", { align: "center" }),
+        p(altShort(3), "lead", { align: "center", after: 16 }),
         grid(
           [1, 1, 1],
           [[cell(detail("Date", "Saturday, June 14"), { fill: "tint", pad: 10 }), cell(detail("Time", "6 to 9 PM"), { fill: "tint", pad: 10 }), cell(detail("Place", "Riverside Park"), { fill: "tint", pad: 10 })]],
           { gap: 10 }
         ),
         space(14),
-        p("Bring a blanket and your friends. Admission is free for members and children under twelve. Food trucks open at 5:30, and the first act starts at six.", "body", { align: "center", size: 11 }),
+        p(alt(1, 1), "body", { align: "center", size: 11 }),
         space(8),
         band([p("Reserve your seat at {web}", "button", { align: "center" })], { fill: "accent", pad: 11, width: round(ctx.W * 0.7) }),
         space(10),
@@ -417,8 +422,8 @@ const CORE_TEMPLATES = [
         band(
           [
             p("{org}", "kicker", { color: "onPrimary", align: "center" }),
-            p("The Big Spring Sale", "display", { color: "onPrimary", align: "center" }),
-            p("Three days only. Everything in the shop is marked down.", "lead", { color: "onPrimary", align: "center", after: 0 }),
+            p("Spring sale", "display", { color: "onPrimary", align: "center", sample: true }),
+            p(alt(1, 5), "lead", { color: "onPrimary", align: "center", after: 0 }),
           ],
           { fill: "primary", pad: [26, 20, 26, 20] }
         ),
@@ -449,7 +454,7 @@ const CORE_TEMPLATES = [
                 [
                   p("Coupon", "kicker", { align: "center" }),
                   p("Take an extra 20% off one item", "headline", { align: "center" }),
-                  p("Bring this coupon to the register. One coupon per customer. Expires at closing on Sunday.", "small", { align: "center" }),
+                  p("One coupon per customer. Expires at closing on Sunday.", "small", { align: "center" }),
                   p("Code: SPRING20", "label", { align: "center", color: "dark", after: 0 }),
                 ],
                 { pad: 14, border: { all: { color: "dark", weight: 1.5, style: "dashed" } } }
@@ -477,9 +482,9 @@ const CORE_TEMPLATES = [
     build(ctx) {
       return [
         p("{org}", "kicker", { size: 13, align: "center" }),
-        p("Community Clean-Up Day", "display", { size: 72, align: "center", after: 14 }),
+        p("Event name", "display", { size: 72, align: "center", after: 14 }),
         pic("full", round(ctx.H * 0.42), { after: 20 }),
-        p("Gloves, bags, and coffee provided. Bring your neighbors.", "lead", { size: 22, align: "center", after: 22 }),
+        p(alt(1, 11), "lead", { size: 22, align: "center", after: 22 }),
         grid(
           [1, 1, 1],
           [[cell(detail("When", "Saturday, May 3", { size: 22 }), { pad: 6 }), cell(detail("Time", "9 AM to noon", { size: 22 }), { pad: 6 }), cell(detail("Meet at", "City Hall steps", { size: 22 }), { pad: 6 })]],
@@ -504,8 +509,8 @@ const CORE_TEMPLATES = [
       return [
         band([p("{org}", "h2", { color: "onPrimary", align: "center", after: 0 })], { fill: "primary", pad: 10 }),
         space(round(ctx.H * 0.14)),
-        p("Please use the side entrance", "display", { size: 54, align: "center", color: "dark", after: 16 }),
-        p("The main doors are closed for repairs until Friday. Thank you for your patience.", "lead", { size: 18, align: "center" }),
+        p("Use the side entrance", "display", { size: 54, align: "center", color: "dark", after: 16 }),
+        p(alt(1, 3), "lead", { size: 18, align: "center" }),
         space(round(ctx.H * 0.12)),
         rule({ color: "accent", weight: 3, width: 120, align: "center" }),
         p("Questions? {phone}", "body", { align: "center", size: 13, color: "muted" }),
@@ -560,7 +565,7 @@ const CORE_TEMPLATES = [
           [
             p("{org}", "kicker", { color: "onPrimary" }),
             p("You are invited", "title", { color: "onPrimary", size: 30 }),
-            p("Our open house is on Saturday, October 4, from 1 to 4 PM.", "lead", { color: "onPrimary" }),
+            p("Saturday, October 4, 1 to 4 PM", "lead", { color: "onPrimary" }),
             p("{web}", "small", { color: "onPrimary", after: 0 }),
           ],
           { pad: [28, 30, 28, 30], fill: "primary", valign: "middle", border: guide }
@@ -574,8 +579,8 @@ const CORE_TEMPLATES = [
                 [
                   cell(
                     [
-                      p("Come see what is new", "h2", { color: "primary" }),
-                      p("Tour the studios, meet the teachers, and try a free mini class. Refreshments all afternoon.", "small"),
+                      p("Open house", "h2", { color: "primary", sample: true }),
+                      p(alt(1, 2), "small"),
                       space(6),
                       p("{org}", "small", { bold: true, after: 0 }),
                       p("{address}\n{city}", "small", { color: "muted" }),
@@ -627,13 +632,13 @@ const CORE_TEMPLATES = [
             {
               height: h,
               cells: [
-                cell([brandMark(ctx, 90, 40, { align: "center", after: 4 }), p("Made with care by {org}", "caption", { align: "center" })], { pad: panelPad(0, 2), valign: "bottom" }),
+                cell([ctx.hasLogo ? logoBox(90, 40, { align: "center", after: 4 }) : null, p("Made with care by {org}", "caption", { align: "center" })], { pad: panelPad(0, 2), valign: "bottom" }),
                 cell(
                   [
                     pic("full", round(h * 0.55), { after: 22 }),
                     p("With Gratitude", "title", { align: "center", color: "primary" }),
                     rule({ color: "accent", weight: 1.5, width: 50, align: "center", before: 4, after: 10 }),
-                    p("for everything you do", "lead", { align: "center", italic: true, color: "muted" }),
+                    p(altShort(3), "lead", { align: "center", italic: true, color: "muted" }),
                   ],
                   { pad: panelPad(1, 2), valign: "middle" }
                 ),
@@ -649,11 +654,11 @@ const CORE_TEMPLATES = [
             {
               height: h,
               cells: [
-                cell([p("“Gratitude turns what we have into enough.”", "quote", { align: "center", size: 16 }), p("A favorite saying", "caption", { align: "center" })], { pad: panelPad(0, 2), valign: "middle" }),
+                cell([p(`“${altQuote(0)}”`, "quote", { align: "center", size: 16 }), p("A favorite saying", "caption", { align: "center" })], { pad: panelPad(0, 2), valign: "middle" }),
                 cell(
                   [
                     p("Dear friend,", "h2", { color: "primary", after: 10 }),
-                    p("Write your message here. A few warm, specific sentences mean more than a long letter. Mention a moment you remember and what it meant to you.", "lead"),
+                    p(alt(2, 2), "lead"),
                     p("With thanks,", "body", { before: 10, after: 2 }),
                     p("{name}", "h2", { color: "primary", fixed: true }),
                   ],
@@ -689,9 +694,9 @@ const CORE_TEMPLATES = [
                 cell(
                   [
                     p("You are invited to", "kicker", { align: "center", after: 10 }),
-                    p("An Evening of Celebration", "title", { align: "center", size: 26 }),
+                    p("Event name", "title", { align: "center", size: 26 }),
                     rule({ color: "accent", weight: 1.5, width: 50, align: "center", before: 6, after: 14 }),
-                    p("Join us as we mark ten wonderful years together", "lead", { align: "center", italic: true, size: 11 }),
+                    p(alt(1, 1), "lead", { align: "center", italic: true, size: 11 }),
                     space(10),
                     p("Saturday, November 22", "h2", { align: "center", after: 2 }),
                     p("Seven o'clock in the evening", "body", { align: "center" }),
@@ -734,7 +739,7 @@ const CORE_TEMPLATES = [
                 cell(
                   [
                     p("With thanks", "h1", { align: "center" }),
-                    p("This event is possible because of our sponsors, volunteers, and friends.", "body", { align: "center", after: 12 }),
+                    p(alt(1, 6), "body", { align: "center", after: 12 }),
                     p("Sponsor name\nSponsor name\nSponsor name", "body", { align: "center", bold: true, after: 22 }),
                     brandMark(ctx, 120, 50, { align: "center" }),
                     ...contactLines({ align: "center" }),
@@ -744,7 +749,7 @@ const CORE_TEMPLATES = [
                 cell(
                   [
                     p("{org} presents", "kicker", { align: "center", color: "onPrimary" }),
-                    p("Annual Awards Evening", "title", { align: "center", color: "onPrimary" }),
+                    p("Event name", "title", { align: "center", color: "onPrimary" }),
                     rule({ color: "accent", weight: 2, width: 60, align: "center", before: 4, after: 14 }),
                     pic("full", round(h * 0.38), { fill: { mix: ["primary", "white", 0.25] }, ink: "onPrimary", after: 16 }),
                     p("Friday, March 20  |  Six o'clock", "h2", { align: "center", color: "onPrimary", after: 2 }),
@@ -767,10 +772,10 @@ const CORE_TEMPLATES = [
                 cell(
                   [
                     p("Welcome", "kicker"),
-                    p("A note before we begin", "h1"),
-                    p("Thank you for joining us. Tonight we celebrate the people who made this year remarkable, and we look ahead to the next one."),
-                    p("Please silence your phones during the ceremony. Photographs are welcome during the reception."),
-                    p("Your name, Your title", "caption", { after: 14 }),
+                    p("Before we begin", "h1"),
+                    p(alt(1, 2)),
+                    p(alt(1, 5)),
+                    p("{name}, {title}", "caption", { after: 14 }),
                     p("Program", "h1"),
                     table(
                       null,
@@ -791,11 +796,11 @@ const CORE_TEMPLATES = [
                     p("Honorees", "kicker"),
                     p("Tonight we recognize", "h1"),
                     p("Honoree name", "h2", { after: 0 }),
-                    p("Award title and one line about why", "small", { after: 8 }),
+                    p(altShort(4), "small", { after: 8 }),
                     p("Honoree name", "h2", { after: 0 }),
-                    p("Award title and one line about why", "small", { after: 8 }),
+                    p(altShort(8), "small", { after: 8 }),
                     p("Honoree name", "h2", { after: 0 }),
-                    p("Award title and one line about why", "small", { after: 14 }),
+                    p(altShort(6), "small", { after: 14 }),
                     band([p("Notes", "label", { after: 30, fixed: true })], { fill: "tint", pad: 10, valign: "top" }),
                   ],
                   { pad: panelPad(1, 2) }
@@ -830,25 +835,26 @@ const CORE_TEMPLATES = [
         grid([0.82, 0.18], items.map((i) => item(...i))),
       ];
       return [
-        brandMark(ctx, 150, 60, { align: "center", after: 2 }),
+        // The title line below already carries the name, so only a real logo goes above it.
+        ctx.hasLogo ? logoBox(150, 60, { align: "center", after: 2 }) : null,
         p("{org}", "title", { align: "center", after: 2 }),
         p("{tagline}", "caption", { align: "center", after: 14 }),
         ...section("To start", [
-          ["Garden soup", "Seasonal vegetables, fresh herbs, toasted bread", "8"],
-          ["Warm flatbread", "Olive oil, sea salt, house dips", "9"],
-          ["Market salad", "Greens, citrus, shaved fennel, toasted seeds", "11"],
+          ["Dish name", altShort(0), "8"],
+          ["Dish name", altShort(1), "9"],
+          ["Dish name", altShort(2), "11"],
         ]),
         ...section("Mains", [
-          ["Roast chicken", "Herb butter, crushed potatoes, greens", "22"],
-          ["River trout", "Brown butter, almonds, lemon, green beans", "24"],
-          ["Mushroom risotto", "Parmesan, thyme, wild mushrooms", "19"],
+          ["Dish name", altShort(3), "22"],
+          ["Dish name", altShort(4), "24"],
+          ["Dish name", altShort(5), "19"],
         ]),
         ...section("To finish", [
-          ["Apple crumble", "Oat topping, vanilla cream", "9"],
-          ["Chocolate pot", "Dark chocolate, sea salt, shortbread", "9"],
+          ["Dish name", altShort(6), "9"],
+          ["Dish name", altShort(7), "9"],
         ]),
         space(6),
-        p("Please tell us about any allergies. Prices include tax.", "caption", { align: "center" }),
+        p(altShort(11), "caption", { align: "center" }),
         p("{address}, {city}  |  {phone}", "small", { align: "center", color: "muted" }),
       ];
     },
@@ -879,9 +885,9 @@ const CORE_TEMPLATES = [
         p("Month Day, Year", "body", { after: 14 }),
         p("Recipient Name\nCompany\nStreet Address\nCity, State Postal Code", "body", { after: 14 }),
         p("Dear Recipient Name,", "body", { after: 10 }),
-        p("Type your letter here. Your letterhead keeps every letter consistent and professional, and it uses the same colors and fonts as the rest of your publications.", "body", { size: 10.5, line: 1.4, after: 10 }),
-        p("A second paragraph can give details, answer a question, or describe next steps. Keep paragraphs short so the letter is easy to read.", "body", { size: 10.5, line: 1.4, after: 10 }),
-        p("Thank you for your time. I look forward to hearing from you.", "body", { size: 10.5, line: 1.4, after: 18 }),
+        p(alt(2, 2), "body", { size: 10.5, line: 1.4, after: 10 }),
+        p(alt(1, 8), "body", { size: 10.5, line: 1.4, after: 10 }),
+        p(alt(1, 6), "body", { size: 10.5, line: 1.4, after: 18 }),
         p("Sincerely,", "body", { after: 30 }),
         p("{name}", "body", { bold: true, after: 0 }),
         p("{title}, {org}", "body", { color: "muted" }),
@@ -929,8 +935,13 @@ const CORE_TEMPLATES = [
       const mailLabel = (r) => {
         const place = [r.city, [r.state, r.postal].filter(Boolean).join(" ")].filter(Boolean).join(", ");
         const lines = [r.company, r.address, r.address2, place, r.country].filter(Boolean);
+        // A Letter label is 1 inch tall, so a six-line address is set tighter there. The address stays at 8 pt or more.
+        const tight = !a4 && lines.length > 4;
         return cell(
-          [p(r.name || "", "small", { bold: true, color: "dark", after: 1, fixed: true }), lines.length ? p(lines.join("\n"), "small", { after: 0, line: 1.15, fixed: true }) : null],
+          [
+            p(r.name || "", "small", { bold: true, color: "dark", after: 1, fixed: true, line: tight ? 1.1 : undefined }),
+            lines.length ? p(lines.join("\n"), "small", { after: 0, line: tight ? 1 : 1.15, size: tight ? 8 : undefined, fixed: true }) : null,
+          ],
           { pad: [4, 10, 4, 12], valign: "middle" }
         );
       };
@@ -1071,14 +1082,14 @@ const CORE_TEMPLATES = [
               cell(
                 [
                   p("Profile", "kicker"),
-                  p("Two or three sentences about the work you do best and the value you bring. Write it for the job you want next.", "body", { after: 12 }),
+                  p(alt(2, 7), "body", { after: 12 }),
                   p("Experience", "kicker"),
-                  ...job("Current role", "Organization", "2022 to now", "Describe a result you achieved, with a number if you can. Then name the skills it shows."),
-                  ...job("Previous role", "Organization", "2018 to 2022", "Lead with outcomes, not duties. Keep each description to two or three lines."),
-                  ...job("Earlier role", "Organization", "2015 to 2018", "Older roles can be shorter. One strong line is enough."),
+                  ...job("Job title", "Organization name, City", "2022 to present", alt(1, 0)),
+                  ...job("Job title", "Organization name, City", "2018 to 2022", alt(1, 11)),
+                  ...job("Job title", "Organization name, City", "2015 to 2018", alt(1, 14)),
                   p("Education", "kicker", { before: 4 }),
-                  p("Degree or certificate", "h2", { after: 0 }),
-                  p("School name  |  Year", "caption"),
+                  p("Degree", "h2", { after: 0, sample: true }),
+                  p("School name, City  |  2014", "caption"),
                 ],
                 { pad: [0, 16, 0, 0] }
               ),
@@ -1091,7 +1102,7 @@ const CORE_TEMPLATES = [
                   p("Languages", "kicker"),
                   p("English (native)\nSpanish (conversational)", "small", { after: 12 }),
                   p("Interests", "kicker"),
-                  p("Community theater, trail running, and bread baking", "small"),
+                  p(altShort(2), "small"),
                 ],
                 { fill: "tint", pad: 12 }
               ),
@@ -1118,7 +1129,7 @@ export const PARTS = [
     id: "heading",
     name: "Heading and text",
     description: "A small label, a heading, and a paragraph.",
-    build: () => [p("Section label", "kicker"), p("A heading for this section", "h1"), p("Write a short paragraph here. Lead with the point, then add one or two supporting details.")],
+    build: () => [p("Section label", "kicker"), p("Section heading", "h1"), p(alt(1, 0))],
   },
   {
     id: "pull-quote",
@@ -1126,7 +1137,7 @@ export const PARTS = [
     description: "A large quotation set between two rules.",
     build: (ctx) => [
       rule({ color: "accent", weight: 1.5, before: 6, after: 8 }),
-      p("“A memorable sentence from the story, pulled out to catch a reader's eye.”", "quote", { align: "center" }),
+      p(`“${altQuote(0)}”`, "quote", { align: "center" }),
       p("Name of the person quoted", "caption", { align: "center", after: 6 }),
       rule({ color: "accent", weight: 1.5, before: 0, after: 10 }),
     ],
@@ -1135,7 +1146,7 @@ export const PARTS = [
     id: "sidebar",
     name: "Sidebar box",
     description: "A shaded box for tips, facts, or a short list.",
-    build: () => [band([p("Did you know?", "h2", { color: "primary" }), p("Use a sidebar for helpful extras that do not belong in the main text.", "small"), list(["A quick tip", "A useful fact", "A related link"], { role: "small", gap: 2, after: 0 })], { fill: "tint", pad: 12, valign: "top", align: "left" })],
+    build: () => [band([p("Did you know?", "h2", { color: "primary" }), p(alt(1, 7), "small"), list(altList(3, 9), { role: "small", gap: 2, after: 0 })], { fill: "tint", pad: 12, valign: "top", align: "left" })],
   },
   {
     id: "coupon",
@@ -1144,7 +1155,7 @@ export const PARTS = [
     build: (ctx) => [
       grid(
         [Math.min(ctx.W, 340)],
-        [[cell([p("Coupon", "kicker", { align: "center" }), p("Save 20% on your next visit", "headline", { align: "center", size: 17 }), p("Present this coupon at checkout. One per customer. Expires December 31.", "small", { align: "center" }), p("Code: SAVE20", "label", { align: "center", color: "dark", after: 0 })], { pad: 12, border: { all: { color: "dark", weight: 1.5, style: "dashed" } } })]],
+        [[cell([p("Coupon", "kicker", { align: "center" }), p("Save 20% on your next visit", "headline", { align: "center", size: 17 }), p("One per customer. Expires December 31.", "small", { align: "center" }), p("Code: SAVE20", "label", { align: "center", color: "dark", after: 0 })], { pad: 12, border: { all: { color: "dark", weight: 1.5, style: "dashed" } } })]],
         { abs: true, align: "center" }
       ),
       space(8),
@@ -1172,13 +1183,13 @@ export const PARTS = [
     id: "button",
     name: "Call to action",
     description: "A colored button-like strip that tells readers what to do.",
-    build: (ctx) => [band([p("Register today at {web}", "button", { align: "center" })], { fill: "accent", pad: 10, width: Math.round(ctx.W * 0.6) }), space(8)],
+    build: (ctx) => [band([p("Register at {web}", "button", { align: "center" })], { fill: "accent", pad: 10, width: Math.round(ctx.W * 0.6) }), space(8)],
   },
   {
     id: "picture",
     name: "Picture with caption",
     description: "A picture placeholder you can replace, with a caption.",
-    build: (ctx) => [pic("full", Math.round(ctx.W * 0.5), { after: 4 }), p("A caption that adds a fact the picture cannot show", "caption", { after: 8 })],
+    build: (ctx) => [pic("full", Math.round(ctx.W * 0.5), { after: 4 }), p(altShort(3), "caption", { after: 8 })],
   },
   {
     id: "logo",
@@ -1190,7 +1201,7 @@ export const PARTS = [
     id: "two-columns",
     name: "Two columns of text",
     description: "Side by side stories with headings.",
-    build: () => [grid([1, 1], [[cell([p("First story", "h2", { color: "primary" }), p("Write a short story or update here. Two columns make short items easy to scan.")]), cell([p("Second story", "h2", { color: "primary" }), p("Write a second item here. Keep both columns about the same length.")])]], { gap: 18 })],
+    build: () => [grid([1, 1], [[cell([p("Story headline", "h2", { color: "primary" }), p(alt(1, 2))]), cell([p("Story headline", "h2", { color: "primary" }), p(alt(1, 3))])]], { gap: 18 })],
   },
   {
     id: "schedule",
@@ -1208,7 +1219,7 @@ export const PARTS = [
     id: "testimonial",
     name: "Testimonial",
     description: "A short review with the reviewer's name.",
-    build: () => [band([p("“The kindest, most helpful team we have worked with. We tell everyone about them.”", "quote", { size: 13 }), p("Customer name, City", "caption", { after: 0 })], { fill: "accentTint", pad: 12, align: "left" }), space(8)],
+    build: () => [band([p(`“${altQuote(3)}”`, "quote", { size: 13 }), p("Customer name, City", "caption", { after: 0 })], { fill: "accentTint", pad: 12, align: "left" }), space(8)],
   },
 ];
 

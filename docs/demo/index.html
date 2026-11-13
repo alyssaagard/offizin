@@ -2,101 +2,158 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Offizin | Live demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Offizin live demo</title>
   <meta name="description" content="Try Offizin in your browser: pick a publication, change its colors, fonts, and business details, and download it as a Word file.">
   <meta name="theme-color" content="#F4F8FC">
   <link rel="icon" href="../favicon.ico" sizes="any">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="../apple-touch-icon.png">
-  <link rel="stylesheet" href="../assets/site.css">
-  <link rel="stylesheet" href="../app/ui/panel.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" id="template-fonts">
+  <!-- IBM Plex for the studio and the template fonts, in one request (set by studio.js). -->
+  <link rel="stylesheet" id="st-fonts">
+  <link rel="stylesheet" href="../assets/site.css">
+  <link rel="stylesheet" href="../app/ui/panel.css">
+  <link rel="stylesheet" href="../assets/studio.css">
 </head>
-<body class="demo-body">
-  <a class="skip" href="#demo-pages">Skip to the page</a>
-  <header class="site-head">
-    <div class="wrap">
-      <a class="brand" href="../" aria-label="Offizin home"><img src="../assets/brand/offizin-mark.svg" alt=""><span>Offizin</span></a>
-      <nav class="nav" aria-label="Main">
-        <a href="./" aria-current="page">Demo</a>
-        <a href="../word/">Word</a>
-        <a href="../google-docs/">Google Docs</a>
-        <a href="../support/">Help</a>
-      </nav>
-    </div>
-  </header>
+<body class="st-body">
+  <a class="skip" href="#st-board">Skip to the page</a>
 
-  <main class="demo">
-    <section class="demo-canvas" aria-label="Publication preview">
-      <div class="demo-bar">
-        <strong id="demo-name">Live demo</strong>
-        <span class="spacer"></span>
-        <label>Zoom
-          <select id="zoom">
+  <div class="st-app" id="studio">
+    <header class="st-bar">
+      <h1 class="st-sr">Offizin live demo</h1>
+      <a class="st-brand" href="../" title="Offizin home">
+        <img src="../assets/brand/offizin-mark.svg" alt="" width="28" height="28">
+        <span class="st-wordmark">Offizin</span>
+        <span class="st-sr">home</span>
+      </a>
+
+      <div class="st-doc">
+        <label class="st-sr" for="st-title">Document title</label>
+        <input id="st-title" class="st-title" type="text" value="Untitled publication" autocomplete="off" spellcheck="false">
+        <span class="st-doc-kind">Live demo</span>
+      </div>
+
+      <div class="st-tools" role="group" aria-label="Studio tools">
+        <div class="st-group" id="st-history" role="group" aria-label="Offizin history" hidden>
+          <button type="button" class="st-tool" id="st-undo" aria-keyshortcuts="Control+Z Meta+Z" disabled>
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M7.5 5 3.5 9l4 4M4 9h7.5a4.5 4.5 0 0 1 0 9H9"/></svg>
+            <span class="st-tool-text">Undo</span>
+          </button>
+          <button type="button" class="st-tool" id="st-redo" aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z" disabled>
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M12.5 5l4 4-4 4M16 9H8.5a4.5 4.5 0 0 0 0 9H11"/></svg>
+            <span class="st-tool-text">Redo</span>
+          </button>
+        </div>
+
+        <div class="st-group" role="group" aria-label="Zoom">
+          <button type="button" class="st-tool st-icon" id="st-zoom-out" title="Zoom out (minus)" aria-keyshortcuts="-">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 10h10"/></svg>
+            <span class="st-sr">Zoom out</span>
+          </button>
+          <label class="st-sr" for="st-zoom">Zoom</label>
+          <select id="st-zoom" class="st-select" title="Zoom (0 fits the page)">
             <option value="fit" selected>Fit</option>
             <option value="0.5">50%</option>
             <option value="0.75">75%</option>
             <option value="1">100%</option>
+            <option value="1.25">125%</option>
+            <option value="1.5">150%</option>
           </select>
-        </label>
-        <label><input type="checkbox" id="guides" checked> Guides</label>
-        <button type="button" class="btn btn-primary" id="download">Download Word file</button>
-      </div>
-      <div class="demo-pages" id="demo-pages" tabindex="-1">
-        <div class="demo-empty">
-          <p class="display">Pick a publication</p>
-          <p>Choose one from the Create tab on the right. Then try a new color scheme, a font scheme, or your own business information, and watch the page change.</p>
+          <button type="button" class="st-tool st-icon" id="st-zoom-in" title="Zoom in (plus)" aria-keyshortcuts="+">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 10h10M10 5v10"/></svg>
+            <span class="st-sr">Zoom in</span>
+          </button>
+        </div>
+
+        <div class="st-group" role="group" aria-label="View">
+          <button type="button" class="st-tool" id="st-margins" aria-pressed="true" title="Show or hide margin guides (G)" aria-keyshortcuts="G">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="3" y="2.5" width="14" height="15" rx="1"/><rect class="st-dash" x="6" y="5.5" width="8" height="9"/></svg>
+            <span class="st-tool-text">Margins</span>
+          </button>
+          <button type="button" class="st-tool" id="st-folds" aria-pressed="true" title="Show or hide fold guides (G)">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="2" y="4" width="16" height="12" rx="1"/><path class="st-dash" d="M7.3 4v12M12.7 4v12"/></svg>
+            <span class="st-tool-text">Folds</span>
+          </button>
+          <button type="button" class="st-tool" id="st-spreads" aria-pressed="false" title="Show the booklet as printer spreads" hidden>
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="2" y="4.5" width="16" height="11" rx="1"/><path d="M10 4.5v11"/></svg>
+            <span class="st-tool-text">Spreads</span>
+          </button>
+          <button type="button" class="st-tool" id="st-print" aria-pressed="false" title="Print preview (P)" aria-keyshortcuts="P">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6 1v4M1 6h4M14 1v4M19 6h-4M6 19v-4M1 14h4M14 19v-4M19 14h-4"/><circle cx="10" cy="10" r="3"/><path d="M10 5.5v9M5.5 10h9"/></svg>
+            <span class="st-tool-text">Print preview</span>
+          </button>
         </div>
       </div>
-    </section>
-    <aside class="demo-panel" id="panel" aria-label="Offizin panel"></aside>
-  </main>
+
+      <div class="st-actions">
+        <button type="button" class="st-btn st-primary" id="st-download" disabled>
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3v10M6 9l4 4 4-4M4 16.5h12"/></svg>
+          <span>Download Word file</span>
+        </button>
+        <div class="st-menu" id="st-install-wrap">
+          <button type="button" class="st-btn" id="st-install" aria-expanded="false" aria-controls="st-install-menu">
+            <span>Install</span>
+            <svg class="st-caret" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6 8l4 4 4-4"/></svg>
+          </button>
+          <div class="st-menu-list" id="st-install-menu" hidden>
+            <a href="../word/"><strong>Offizin for Word</strong><span>Windows, Mac, and Word on the web</span></a>
+            <a href="../google-docs/"><strong>Offizin for Google Docs</strong><span>Add the script to a document</span></a>
+          </div>
+        </div>
+        <button type="button" class="st-btn st-phone-only" id="st-panel-toggle" aria-expanded="false" aria-controls="st-side">
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="2.5" y="3.5" width="15" height="13" rx="1.5"/><path d="M12 3.5v13"/></svg>
+          <span>Panel</span>
+        </button>
+      </div>
+    </header>
+
+    <nav class="st-nav" aria-label="Pages">
+      <div class="st-nav-head"><span>Pages</span><span class="st-count" id="st-nav-count"></span></div>
+      <ol class="st-nav-list" id="st-nav-list"></ol>
+    </nav>
+
+    <div class="st-work" role="region" aria-label="Pasteboard">
+      <div class="st-corner" id="st-corner" aria-hidden="true"></div>
+      <div class="st-ruler st-ruler-h" id="st-ruler-h" aria-hidden="true"></div>
+      <div class="st-ruler st-ruler-v" id="st-ruler-v" aria-hidden="true"></div>
+      <div class="st-board" id="st-board" tabindex="0" aria-label="Publication pages. Scroll to move through them. While the pages have focus, plus and minus zoom, 0 fits the page, G shows or hides guides, and P is print preview.">
+        <div class="st-pages" id="st-pages"></div>
+        <div class="st-empty" id="st-empty" hidden>
+          <svg class="st-empty-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><circle cx="32" cy="32" r="14"/><circle cx="32" cy="32" r="6"/><path d="M32 6v52M6 32h52"/></svg>
+          <p class="st-empty-title">The press is ready</p>
+          <p>Pick a publication on the Create tab, then try a new color scheme, a font scheme, or your own business information, and watch the page change.</p>
+        </div>
+      </div>
+    </div>
+
+    <aside class="st-side" id="st-side" aria-label="Offizin panel">
+      <div class="st-sheet-head st-phone-only">
+        <span class="st-grip" aria-hidden="true"></span>
+        <button type="button" class="st-btn st-small" id="st-panel-close">Close panel</button>
+      </div>
+      <div class="st-panel" id="st-panel"></div>
+    </aside>
+
+    <!-- On phones the panel sheet is hidden while closed, so messages also show here. -->
+    <div class="st-toast" id="st-toast" role="status" aria-live="polite"></div>
+
+    <footer class="st-status" aria-label="Status">
+      <span class="st-cell" id="st-s-page">No publication</span>
+      <span class="st-cell st-hide-narrow" id="st-s-paper"></span>
+      <span class="st-cell st-hide-narrow" id="st-s-orient"></span>
+      <span class="st-cell" id="st-s-zoom"></span>
+      <span class="st-cell st-overflow" id="st-s-overflow" role="status" aria-live="polite"></span>
+      <span class="st-cell st-keys st-hide-narrow" aria-hidden="true" title="These keys work while the pages have focus"><kbd>+</kbd><kbd>-</kbd> zoom <kbd>0</kbd> fit <kbd>G</kbd> guides <kbd>P</kbd> print</span>
+    </footer>
+  </div>
+
+  <noscript><p class="st-noscript">The Offizin demo needs JavaScript. You can still <a href="../word/">install Offizin for Word</a> or <a href="../google-docs/">for Google Docs</a>.</p></noscript>
 
   <script type="module">
-    import { googleFontsHref } from "../app/core/schemes.js";
-    import { createDemoHost } from "../app/hosts/demo.js";
-    import { mountPanel } from "../app/ui/panel.js";
-
-    // Template fonts for the preview. The demo is the one page that loads Google Fonts.
-    document.getElementById("template-fonts").href = googleFontsHref();
-
-    const pages = document.getElementById("demo-pages");
-    const name = document.getElementById("demo-name");
-    const host = createDemoHost({
-      canvas: pages,
-      onRender: (model) => (name.textContent = model.name),
-    });
-    const panel = mountPanel(document.getElementById("panel"), host, { siteUrl: ".." });
-
-    document.getElementById("zoom").addEventListener("change", (e) => host.setView({ zoom: e.target.value }));
-    document.getElementById("guides").addEventListener("change", (e) => host.setView({ guides: e.target.checked }));
-    document.getElementById("download").addEventListener("click", () => {
-      try {
-        host.downloadDocx();
-        panel.setStatus("Word file downloaded. It also opens in Google Docs: upload it to Drive and open it with Google Docs.", "success", true);
-      } catch (e) {
-        panel.setStatus(e.message, "error");
-      }
-    });
-    let resize;
-    window.addEventListener("resize", () => {
-      clearTimeout(resize);
-      resize = setTimeout(() => host.redraw(), 150);
-    });
-    document.fonts && document.fonts.ready.then(() => host.redraw());
-
-    // Open a template from a link such as demo/#template=newsletter, or start with the tri-fold.
-    function openFromHash() {
-      const m = /template=([a-z0-9-]+)/.exec(location.hash);
-      panel.openTemplate(m ? m[1] : "trifold");
-      const create = document.querySelector('#panel [data-action="create"]');
-      if (create) create.click();
-    }
-    setTimeout(openFromHash, 0);
-    window.addEventListener("hashchange", openFromHash);
+    import { mountStudio } from "../app/studio/studio.js";
+    mountStudio(document);
   </script>
 </body>
 </html>

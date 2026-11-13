@@ -5,8 +5,8 @@ Notes for publishing Offizin and keeping it running. Everything here is done by 
 ## Release checklist
 
 1. Make changes in `docs/app/`, `google-docs/`, or `scripts/`.
-2. If it is a release, raise `VERSION` in `scripts/site.config.mjs` and `OZ_VERSION` in `google-docs/Code.gs`, and add a line to `CHANGELOG.md`.
-3. Run `npm run build` and `npm run check`. Both must pass.
+2. If it is a release, raise `VERSION` and set `RELEASE_DATE` in `scripts/site.config.mjs`, raise `OZ_VERSION` in `google-docs/Code.gs`, and add a line to `CHANGELOG.md`. The build stamps the download packages with `RELEASE_DATE`, so set it before building, or the committed packages carry the previous date.
+3. Run `npm run build` and `npm run check`. Both must pass. Each area also has its own tests in `scripts/tests/` (Word, Google Docs, templates, colors, styles, demo, panel, packages), and `node scripts/check.mjs --only=word` runs just one of them while you work on that area. The packages test and the GitHub workflow both compare the committed packages in `docs/download` with a fresh build, so a changed guide or file without a rebuild fails the check. The panel's in-document tests drive the panel in jsdom, which `npm install` provides. If jsdom lives in another folder, set `OFFIZIN_JSDOM` to that folder (the one that holds its `node_modules`). Without jsdom those tests are skipped with a note, and the GitHub check does not install packages, so it skips them too.
 4. Commit and push to `main`. GitHub Pages publishes `docs/` within a minute or two.
 
 Word users get the new version automatically, because Word loads Offizin from the website. Google Docs users who pasted the code update by pasting it again (the install page says so), so mention Google changes in the changelog.
@@ -30,6 +30,10 @@ The permanent address is `https://offizin.alyssaagard.dev`. The Word manifest co
 Until the custom domain is set, the site is also reachable at `https://alyssaagard.github.io/offizin/`, but the Word add-in only works at the permanent address.
 
 To use a different address, change `SITE_URL` in `scripts/site.config.mjs`, run `npm run build`, and update the CNAME. Anyone who already installed the Word add-in must install it again.
+
+## Example text
+
+Templates use plain placeholders for anything with a format (names, emails, phone numbers, addresses, dates, times, prices) and Middle High German filler from `docs/app/core/filler.js` for running text, the way Word and Docs use Latin. Use the helpers there (`alt`, `altShort`, `altList`, `altQuote`) rather than writing new filler, and keep headings to a few plain words.
 
 ## Google Docs starter document
 

@@ -10,11 +10,18 @@
  *   google: Google Fonts families, which Google Docs offers by name
  *   css:    the stack used by the on-screen preview
  */
-import { mix, readableOn, normalizeHex } from "./util.js";
+import { mix, readableOn, normalizeHex, contrastRatio, hexToRgb, rgbToHex } from "./util.js";
 
+/**
+ * The first two schemes are black and white, for publications that print well on any printer.
+ * "Ink" is the default. Each scheme keeps its main color and its text color distinct (even when
+ * both are near black), so restyling can tell colored panels from text.
+ */
 export const COLOR_SCHEMES = [
+  { id: "ink", name: "Ink", primary: "#111111", accent: "#5C5C5C", dark: "#1A1A1A" },
+  { id: "graphite", name: "Graphite", primary: "#404040", accent: "#111111", dark: "#1A1A1A" },
   { id: "harbor", name: "Harbor", primary: "#1B3A5C", accent: "#C0392B", dark: "#1C2430" },
-  { id: "ink-gold", name: "Ink and Gold", primary: "#1A1A1A", accent: "#A88B5C", dark: "#1A1A1A" },
+  { id: "ink-gold", name: "Ink and Gold", primary: "#121212", accent: "#A88B5C", dark: "#1A1A1A" },
   { id: "orchard", name: "Orchard", primary: "#2F5D3A", accent: "#D98E04", dark: "#1E2A21" },
   { id: "terracotta", name: "Terracotta", primary: "#9C4A2F", accent: "#2E6E73", dark: "#2B1D18" },
   { id: "lagoon", name: "Lagoon", primary: "#0E6E72", accent: "#F28C38", dark: "#13292A" },
@@ -89,6 +96,9 @@ export const FONT_SCHEMES = [
 /** Google Fonts families used by the font schemes, for preview pages that load them. */
 export const GOOGLE_FONT_FAMILIES = [
   "EB Garamond:ital,wght@0,400;0,700;1,400",
+  "Merriweather:ital,wght@0,400;0,700;1,400",
+  "Playfair Display:ital,wght@0,400;0,700;1,400",
+  "Roboto:ital,wght@0,400;0,700;1,400",
   "Lato:ital,wght@0,400;0,700;1,400",
   "Montserrat:ital,wght@0,400;0,700;1,400",
   "Open Sans:ital,wght@0,400;0,700;1,400",
@@ -163,6 +173,56 @@ export const GOOGLE_FONT_CHOICES = [
   { name: "Verdana", css: "Verdana, sans-serif" },
 ];
 
+/**
+ * The closest font on the other editor, so a font scheme of your own works in Word and in
+ * Google Docs. FONT_EQUIVALENTS.word maps Word fonts to Google fonts, and .google the reverse.
+ */
+export const FONT_EQUIVALENTS = {
+  word: {
+    Aptos: "Inter",
+    "Aptos Display": "Inter",
+    Arial: "Arial",
+    "Bookman Old Style": "Libre Baskerville",
+    Calibri: "Open Sans",
+    Cambria: "Merriweather",
+    "Century Gothic": "Montserrat",
+    Constantia: "Lora",
+    Corbel: "Source Sans 3",
+    "Franklin Gothic Medium": "Oswald",
+    Garamond: "EB Garamond",
+    Georgia: "Georgia",
+    "Gill Sans MT": "Lato",
+    "Palatino Linotype": "Libre Baskerville",
+    Rockwell: "Roboto Slab",
+    "Segoe UI": "Open Sans",
+    "Times New Roman": "Times New Roman",
+    "Trebuchet MS": "Nunito",
+    Verdana: "Verdana",
+  },
+  google: {
+    Arial: "Arial",
+    "Cormorant Garamond": "Garamond",
+    "EB Garamond": "Garamond",
+    Georgia: "Georgia",
+    Inter: "Aptos",
+    Lato: "Gill Sans MT",
+    "Libre Baskerville": "Bookman Old Style",
+    Lora: "Constantia",
+    Merriweather: "Cambria",
+    Montserrat: "Century Gothic",
+    Nunito: "Trebuchet MS",
+    "Open Sans": "Calibri",
+    Oswald: "Franklin Gothic Medium",
+    "Playfair Display": "Georgia",
+    Raleway: "Century Gothic",
+    Roboto: "Arial",
+    "Roboto Slab": "Rockwell",
+    "Source Sans 3": "Corbel",
+    "Times New Roman": "Times New Roman",
+    Verdana: "Verdana",
+  },
+};
+
 const cssFor = (list, name, generic) => (list.find((f) => f.name === name) || { css: `'${name}', ${generic}` }).css;
 
 /**
@@ -192,20 +252,56 @@ export function palette(base) {
   const primary = normalizeHex(base.primary);
   const accent = normalizeHex(base.accent);
   const dark = normalizeHex(base.dark || "#1A1A1A");
-  return {
+  const tint = mix(primary, "#FFFFFF", 0.9);
+  const accentTint = mix(accent, "#FFFFFF", 0.86);
+  // The order matters: when two tokens share a color, the earlier one keeps it exactly.
+  return distinct({
     primary,
     accent,
     dark,
     white: "#FFFFFF",
-    muted: mix(dark, "#FFFFFF", 0.38),
+    muted: mix(dark, "#FFFFFF", 0.3),
     line: mix(dark, "#FFFFFF", 0.78),
-    tint: mix(primary, "#FFFFFF", 0.9),
-    accentTint: mix(accent, "#FFFFFF", 0.86),
+    tint,
+    accentTint,
     deep: mix(primary, "#000000", 0.25),
     onPrimary: readableOn(primary, dark),
     onAccent: readableOn(accent, dark),
     onDark: readableOn(dark, dark),
-  };
+    // Text set in the accent color: the accent, darkened just enough to read at 4.5:1 on the
+    // light backgrounds it sits on. Rules, fills, and bullets keep the accent itself.
+    accentText: readableTone(accent, dark, ["#FFFFFF", tint, accentTint]),
+  });
+}
+
+/** Mixes a color toward dark in 5% steps until it reaches 4.5:1 against every background. */
+function readableTone(color, dark, backgrounds) {
+  for (let i = 0; i <= 20; i++) {
+    const c = mix(color, dark, i / 20);
+    if (backgrounds.every((bg) => contrastRatio(c, bg) >= 4.5)) return c;
+  }
+  return dark;
+}
+
+/**
+ * Gives every token its own color value. Apply design and Offizin's Undo replace one color value
+ * with another, so two tokens that share a value (white text on the main color and white text on
+ * the accent, for example) could not be told apart and would both go the same way. A repeated
+ * value moves by one step in its blue channel, which no one can see in print or on screen.
+ */
+function distinct(tokens) {
+  const used = new Set();
+  const out = {};
+  for (const [key, value] of Object.entries(tokens)) {
+    let c = value;
+    for (let step = 1; used.has(c); step++) {
+      const [r, g, b] = hexToRgb(value);
+      c = rgbToHex([r, g, b >= 128 ? b - step : b + step]);
+    }
+    used.add(c);
+    out[key] = c;
+  }
+  return out;
 }
 
 /** Fonts for one platform: "word", "google", or "web" (the demo, which uses Google Fonts). */
