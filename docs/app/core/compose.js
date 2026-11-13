@@ -826,6 +826,8 @@ export function compose(template, theme, platform, options = {}) {
     styles: composer.styles(),
     blocks,
     pages,
+    // Running text (resumes and CVs) continues onto more pages, as it does in Word and Google Docs.
+    flow: !!template.flow && !pages,
     booklet,
     footer: resolveFooter(composer, template, ctx),
     print,

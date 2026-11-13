@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.2 (2026-11-13)
+
+- The preview shows the two-page resume and the CVs on two pages, the way Word and Google Docs lay them out, instead of warning that text runs past the first page. Headings stay with the text that follows them.
+
 ## 2.1.1 (2026-11-13)
 
 - Headings use a typewriter-like code face. Publications get the new Typewriter font scheme by default: IBM Plex Mono headings in Google Docs and the live demo, Consolas in Word (the closest face every copy of Word has), with Arial body text. Settings that still use the old default fonts (Editorial) move to Typewriter; choose Editorial again on the Design tab if you prefer it.
