@@ -11,10 +11,10 @@ export const SITE_URL = "https://offizin.alyssaagard.dev";
 /** The Word add-in's permanent ID. Keep it the same for the life of the add-in. */
 export const ADDIN_ID = "e0b7a428-5265-42f2-aa60-f3629f4e70fe";
 
-export const VERSION = "2.1.0";
+export const VERSION = "2.1.1";
 
 /** The release date of this version, used for the timestamps inside the download packages. */
-export const RELEASE_DATE = "2026-11-12";
+export const RELEASE_DATE = "2026-11-13";
 
 /** Shown as the publisher in Word. Change to the company name after the transfer. */
 export const PROVIDER = "Alyssa I. Agard";

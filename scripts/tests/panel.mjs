@@ -143,7 +143,9 @@ export async function run({ ROOT, fail, ok, load }) {
   {
     const { sanitizeState, defaultState } = panel;
     const d = defaultState();
-    expect(d.v === 2 && d.theme.layout.padScale === 1 && d.theme.customFonts.heading.word && d.theme.customFonts.body.google, "settings: defaults include spacing and a font scheme of your own");
+    expect(d.v === 3 && d.theme.fontScheme === "typewriter" && d.theme.layout.padScale === 1 && d.theme.customFonts.heading.word && d.theme.customFonts.body.google, "settings: defaults include spacing and a font scheme of your own");
+    const moved = (v, fontScheme) => sanitizeState({ v, theme: { fontScheme } }).theme.fontScheme;
+    expect(moved(2, "editorial") === "typewriter" && moved(undefined, "editorial") === "typewriter" && moved(3, "editorial") === "editorial" && moved(2, "bold") === "bold", "settings: the old default fonts (Editorial) move to Typewriter; a later or other choice is kept");
     const s = sanitizeState({
       theme: {
         colorScheme: "nope",

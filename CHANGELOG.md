@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.1 (2026-11-13)
+
+- Headings use a typewriter-like code face. Publications get the new Typewriter font scheme by default: IBM Plex Mono headings in Google Docs and the live demo, Consolas in Word (the closest face every copy of Word has), with Arial body text. Settings that still use the old default fonts (Editorial) move to Typewriter; choose Editorial again on the Design tab if you prefer it.
+- The website and the live demo use IBM Plex Mono for their headings. The Offizin wordmark is unchanged.
+
 ## 2.1.0 (2026-11-12)
 
 - Offizin's own Undo and Redo, with a history list: they reverse only what Offizin did (publications, page parts, designs, page setup, and columns) and leave your typing and the editor's own Undo alone. Keyboard: Ctrl or Command Z, and Ctrl or Command Shift Z.

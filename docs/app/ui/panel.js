@@ -43,7 +43,7 @@ import { isEditableTarget } from "../studio/keys.js";
 import { DIAGRAMS } from "./diagrams.js";
 import { MARK_SVG } from "./mark.js";
 
-const STATE_VERSION = 2;
+const STATE_VERSION = 3;
 
 /** How many information sets the saved settings keep, and the Info tab's New button allows. */
 export const MAX_SETS = 20;
@@ -212,7 +212,7 @@ export function defaultState() {
     theme: {
       colorScheme: "ink",
       customColors: { primary: "#1B3A5C", accent: "#C0392B", dark: "#1C2430" },
-      fontScheme: "editorial",
+      fontScheme: "typewriter",
       customFonts: defaultCustomFonts(),
       paper: guessPaper(),
       layout: { ...DEFAULT_LAYOUT },
@@ -253,6 +253,8 @@ export function sanitizeState(input) {
     out.theme.customFonts = { heading: part("heading"), body: part("body"), headingBold: t.customFonts.headingBold !== false };
   }
   if (t.fontScheme === "custom" || FONT_SCHEMES.some((f) => f.id === t.fontScheme)) out.theme.fontScheme = t.fontScheme;
+  // Settings saved before 2.1.1 with the old default fonts (Editorial) move to the new default.
+  if (!(Number(input.v) >= 3) && out.theme.fontScheme === "editorial") out.theme.fontScheme = "typewriter";
   if (t.paper === "letter" || t.paper === "a4") out.theme.paper = t.paper;
   if (t.layout && typeof t.layout === "object") out.theme.layout = clampLayout(t.layout);
   if (input.sets && typeof input.sets === "object") {

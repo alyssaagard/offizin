@@ -61,7 +61,7 @@
       <div class="card">
         <img class="feature-icon" src="assets/icons/ribbon-design-80.png" alt="">
         <h3>Color and font schemes</h3>
-        <p>Black and white by default, with twelve more color schemes and eight font pairings, or your own colors and fonts. Change the scheme later and every color and font in the publication switches exactly, with your text kept.</p>
+        <p>Black and white by default, with twelve more color schemes and nine font pairings, or your own colors and fonts. Change the scheme later and every color and font in the publication switches exactly, with your text kept.</p>
       </div>
       <div class="card">
         <img class="feature-icon" src="assets/icons/ribbon-info-80.png" alt="">
@@ -167,7 +167,7 @@
       a.querySelector("b").textContent = t.name;
       a.querySelector("span:last-child").textContent = t.sizeLabel;
       gallery.appendChild(a);
-      const model = compose(t, { colorScheme: "ink", fontScheme: "editorial", paper: "letter" }, "web");
+      const model = compose(t, { colorScheme: "ink", fontScheme: "typewriter", paper: "letter" }, "web");
       requestAnimationFrame(() => fit(a.querySelector(".tile-art"), model, 150, 140));
     }
 
@@ -181,7 +181,7 @@
       const holder = document.createElement("div");
       Object.assign(holder.style, pos);
       stack.appendChild(holder);
-      const model = compose(TEMPLATES.find((t) => t.id === id), { colorScheme: scheme, fontScheme: "editorial", paper: "letter" }, "web");
+      const model = compose(TEMPLATES.find((t) => t.id === id), { colorScheme: scheme, fontScheme: "typewriter", paper: "letter" }, "web");
       renderPreview(holder, model, { width, pages: 1, guides: false, checkOverflow: false });
     }
   </script>
