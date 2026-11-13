@@ -11,7 +11,7 @@ export const SITE_URL = "https://offizin.alyssaagard.dev";
 /** The Word add-in's permanent ID. Keep it the same for the life of the add-in. */
 export const ADDIN_ID = "e0b7a428-5265-42f2-aa60-f3629f4e70fe";
 
-export const VERSION = "2.1.1";
+export const VERSION = "2.1.2";
 
 /** The release date of this version, used for the timestamps inside the download packages. */
 export const RELEASE_DATE = "2026-11-13";

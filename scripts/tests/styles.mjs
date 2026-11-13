@@ -39,6 +39,22 @@ export async function run({ fail, ok, load }) {
     if (!problems.length) ok(`styles: the ${plain.length} plain resumes and CVs take their name and heading look from Word's own styles`);
   }
 
+  // 1b. Running text flows onto more pages in the preview --------------------------------
+  {
+    const { flowPages } = await load("docs/app/render/preview.js");
+    const blocks = Array.from({ length: 8 }, (_, i) => ({ id: i, keepNext: i === 4 }));
+    const tops = blocks.map((_, i) => i * 100);
+    const bottoms = tops.map((t) => t + 90);
+    const ids = (pages) => pages.map((pg) => pg.map((x) => x.id).join("")).join("|");
+    // Each block is 90 points tall and starts 100 points after the last. Block 4 is a heading.
+    expect(ids(flowPages(blocks, tops, bottoms, 590)) === "012345|67", "flow: blocks fill a page and the rest moves to the next one");
+    expect(ids(flowPages(blocks, tops, bottoms, 490)) === "0123|4567", "flow: a heading at the bottom of a page moves on with the text after it");
+    expect(ids(flowPages(blocks, tops, bottoms, 2000)) === "01234567" && ids(flowPages(blocks, tops, bottoms, 50)) === "0|1|2|3|4|5|6|7", "flow: everything stays on one page when it fits, and a block taller than a page stays whole");
+    const flowing = TEMPLATES.filter((t) => compose(t, { paper: "letter" }, "web").flow).map((t) => t.id);
+    const plainIds = TEMPLATES.filter((t) => t.plain).map((t) => t.id);
+    expect(flowing.join() === plainIds.join() && plainIds.length === 6, "flow: the plain resumes and CVs, and only they, flow onto more pages");
+  }
+
   // 2. Tri-fold margins ---------------------------------------------------------------------
   {
     const t = TEMPLATES.find((x) => x.id === "trifold");

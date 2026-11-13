@@ -1360,8 +1360,9 @@ export function mountPanel(root, host, opts = {}) {
       }
       return [];
     }
-    const total = model.pages ? model.pages.length : splitPages(model.blocks).length;
     const result = renderPreview(box, model, { width: innerWidth(), labels: true, gap: 10, pages: PREVIEW_PAGES }) || {};
+    // Running text (resumes and CVs) is split into pages when it is drawn, so the drawing knows the count.
+    const total = result.total || (model.pages ? model.pages.length : splitPages(model.blocks).length);
     const over = (result.overflow || []).map((o, i) => (o ? i + 1 : 0)).filter(Boolean);
     const canShrink = over.length > 0 && !!shrinkStep(effectiveLayout(ui.selected), layoutKeys(ui.selected));
     if (fit) fit.hidden = !canShrink;

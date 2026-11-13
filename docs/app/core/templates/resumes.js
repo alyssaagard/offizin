@@ -85,6 +85,7 @@ export const RESUME_TEMPLATES = [
   {
     id: "resume-plain",
     styles: resumeStyles,
+    flow: true,
     name: "Plain resume, chronological",
     category: "resumes",
     description:
@@ -126,6 +127,7 @@ export const RESUME_TEMPLATES = [
   {
     id: "resume-plain-skills",
     styles: resumeStyles,
+    flow: true,
     name: "Plain resume, skills first",
     category: "resumes",
     description:
@@ -167,6 +169,7 @@ export const RESUME_TEMPLATES = [
   {
     id: "resume-plain-early",
     styles: resumeStyles,
+    flow: true,
     name: "Plain resume, early career",
     category: "resumes",
     description:
@@ -208,6 +211,7 @@ export const RESUME_TEMPLATES = [
   {
     id: "resume-plain-federal",
     styles: resumeStyles,
+    flow: true,
     name: "Plain resume, federal",
     category: "resumes",
     description:
@@ -270,6 +274,7 @@ export const RESUME_TEMPLATES = [
   {
     id: "cv-academic",
     styles: resumeStyles,
+    flow: true,
     name: "Academic CV",
     category: "resumes",
     description:
@@ -349,6 +354,7 @@ export const RESUME_TEMPLATES = [
   {
     id: "cv-europe",
     styles: resumeStyles,
+    flow: true,
     name: "UK and Europe CV",
     category: "resumes",
     description:

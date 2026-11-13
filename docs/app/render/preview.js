@@ -42,6 +42,26 @@ export function splitPages(blocks) {
   return pages;
 }
 
+/**
+ * Splits one page of flowing blocks into pages, from measured positions. `tops` and `bottoms`
+ * are each block's top and bottom edge in the unbroken flow, and `avail` is the height of a
+ * page inside its margins. A block marked keepNext (a heading) moves to the next page with
+ * the block after it. A single block taller than a page stays whole.
+ */
+export function flowPages(blocks, tops, bottoms, avail) {
+  const pages = [];
+  let start = 0;
+  for (let i = 1; i < blocks.length; i++) {
+    if (bottoms[i] - tops[start] <= avail + 0.5) continue;
+    let cut = i;
+    while (cut - 1 > start && blocks[cut - 1].keepNext) cut--;
+    pages.push(blocks.slice(start, cut));
+    start = cut;
+  }
+  pages.push(blocks.slice(start));
+  return pages;
+}
+
 function runHtml(r) {
   const text = escapeHtml(r.text).replace(/\n/g, "<br>");
   return r.bold ? `<strong>${text}</strong>` : text;
@@ -232,13 +252,15 @@ function sheetsFor(model, opts) {
 export function renderPreview(container, model, opts = {}) {
   ensurePreviewCss(container.ownerDocument);
   const { page } = model;
-  const sheets = sheetsFor(model, opts).slice(0, opts.pages || Infinity);
-  const first = sheets[0] || { width: page.width, height: page.height };
+  let all = sheetsFor(model, opts);
+  const first = all[0] || { width: page.width, height: page.height };
   const scale = opts.width ? opts.width / (first.width * PX_PER_PT) : opts.scale ?? 1;
   const gap = opts.gap ?? 18;
-  const total = model.pages ? model.pages.length : splitPages(model.blocks).length;
   const pad = `${page.margins.top}pt ${page.margins.right}pt ${page.margins.bottom}pt ${page.margins.left}pt`;
   const unprintable = opts.printPreview ? `<div class="ozp-unprintable" style="border-width:${UNPRINTABLE_PT}pt"></div>` : "";
+  const draw = () => {
+  const sheets = all.slice(0, opts.pages || Infinity);
+  const total = all.length;
   let html = `<div class="ozp-doc${opts.printPreview ? " ozp-print" : ""}" style="gap:${gap}px">`;
   sheets.forEach((s, i) => {
     const label = opts.labels && (sheets.length > 1 || s.halves) ? `<div class="ozp-label">${s.label}</div>` : "";
@@ -258,15 +280,42 @@ export function renderPreview(container, model, opts = {}) {
   });
   html += "</div>";
   container.innerHTML = html;
+  return sheets;
+  };
+  let sheets = draw();
+  // Running text flows onto more pages: measure where each block lands, split it into pages
+  // the way the editors do, and draw again.
+  if (model.flow && opts.checkOverflow !== false && !sheets.some((s) => s.halves)) {
+    const word = all[0] && all[0].label ? all[0].label.split(" ")[0] : "Page";
+    const flowed = [];
+    let split = false;
+    const contents = container.querySelectorAll(".ozp-sheet .ozp-content");
+    all.forEach((s, i) => {
+      const content = contents[i];
+      const kids = content ? [...content.children] : [];
+      if (!content || kids.length !== s.blocks.length || !(content.scrollHeight > content.clientHeight + 2)) return flowed.push(s.blocks);
+      const tops = kids.map((k) => k.offsetTop);
+      const bottoms = kids.map((k) => k.offsetTop + k.offsetHeight);
+      const parts = flowPages(s.blocks, tops, bottoms, content.clientHeight);
+      if (parts.length > 1) split = true;
+      flowed.push(...parts);
+    });
+    if (split) {
+      all = flowed.map((blocks, i) => ({ width: page.width, height: page.height, label: `${word} ${i + 1}`, blocks, index: i }));
+      sheets = draw();
+    }
+  }
   const overflow = [];
   if (opts.checkOverflow !== false) {
     container.querySelectorAll(".ozp-sheet").forEach((sheet) => {
-      const over = [...sheet.querySelectorAll(".ozp-content")].some((content) => content.scrollHeight > content.clientHeight + 2);
+      // In running text, the space after the last paragraph on a page does not count, as in the editors.
+      const used = (content) => (model.flow && content.lastElementChild ? content.lastElementChild.offsetTop + content.lastElementChild.offsetHeight : content.scrollHeight);
+      const over = [...sheet.querySelectorAll(".ozp-content")].some((content) => used(content) > content.clientHeight + 2);
       overflow.push(over);
       if (over && opts.badges !== false && !opts.printPreview) sheet.insertAdjacentHTML("beforeend", `<div class="ozp-overflow-badge">Text overflows this page</div>`);
     });
   }
-  return { scale, overflow, sheets: sheets.length };
+  return { scale, overflow, sheets: sheets.length, total: all.length };
 }
 
 /** Highlights the first paragraph whose text starts with `text` and scrolls it into view. */
